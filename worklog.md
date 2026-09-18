@@ -133,3 +133,20 @@ Stage Summary:
 - Checkout details autofill working end-to-end (save -> prefill -> hint)
 - SEO: structured data, sitemap, robots, canonicals, OG/Twitter, per-page metadata
 - Pushed to github.com/Developer915b/baraka-kauppa (main)
+
+---
+Task ID: 7
+Agent: Main agent (Super Z)
+Task: Add a back button to the product detail page (user: "not seeing any back page going button in product detailed page") and push.
+
+Work Log:
+- product-detail.tsx: added a visible pill "Back" button (ArrowLeft icon) above the breadcrumbs; smart handler — router.back() when document.referrer is same-origin (visitor came from within the site), otherwise router.push("/shop") fallback for direct links / search-engine entries
+- i18n: added product.back = "Back" (EN) / "Takaisin" (FI)
+- Fixed pre-existing overlap bug found while testing: page top content sat under the 64px fixed header (pt-6 = 24px) — the old breadcrumbs were partially hidden too; changed container to pt-24 (96px) to clear the fixed header
+- Tests (agent-browser): desktop 1280 + mobile 390 screenshots (button visible, no overlap), click-through shop -> product -> Back returns to /shop, direct URL entry -> Back lands on /shop (fallback path), FI label "Takaisin" verified, mobile horizontal overflow = 0px, biome clean, tsc clean (new tsconfig.check.json scopes typecheck to src/), NETLIFY=true production build OK (all routes unchanged)
+- Added scripts/shot-*.png to .gitignore (consistent with earlier screenshot-exclusion chore)
+
+Stage Summary:
+- Every product page now has a working, localized Back button above the breadcrumbs
+- Fixed the product page header-overlap bug (breadcrumbs were previously covered by the fixed header)
+- Pushed to github.com/Developer915b/baraka-kauppa (main)

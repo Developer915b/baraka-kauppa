@@ -226,6 +226,7 @@ export const translations = {
         "Carefully sourced, quality-checked groceries. Certified halal selection and fresh stock weekly.",
       related: "You may also like",
       viewAll: "View all products",
+      back: "Back",
     },
     homeCta: {
       title: "World groceries, delivered to your door",
@@ -506,6 +507,7 @@ export const translations = {
         "Huolella valittuja ja laadukkaita elintarvikkeita. Sertifioitu halal-valikoima ja tuoretta tavaraa viikoittain.",
       related: "Saatat pitää myös näistä",
       viewAll: "Katso kaikki tuotteet",
+      back: "Takaisin",
     },
     homeCta: {
       title: "Maailman maut kotiin tai noudettavaksi",

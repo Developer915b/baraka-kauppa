@@ -55,6 +55,7 @@ server.log
 # local test screenshots
 scripts/test-*.png
 scripts/verify-*.png
+scripts/shot-*.png
 scripts/fb_*.json
 scripts/fb_*.html
 scripts/search*.json

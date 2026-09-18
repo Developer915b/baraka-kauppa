@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
+  ArrowLeft,
   ChevronRight,
   Minus,
   Plus,
@@ -41,6 +43,7 @@ type ProductDetailProps = {
 export function ProductDetail({ product, related }: ProductDetailProps) {
   const { t, locale } = useLanguage();
   const { toast } = useToast();
+  const router = useRouter();
   const addItem = useCart((s) => s.addItem);
   const openCart = useCart((s) => s.openCart);
 
@@ -86,11 +89,33 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
 
   const maxQty = Math.max(1, Math.min(product.stock, 99));
 
+  // Go back to where the visitor came from when it was within this site;
+  // otherwise (direct link / search engine) land on the shop page.
+  const handleBack = () => {
+    const cameFromSite =
+      document.referrer && document.referrer.startsWith(window.location.origin);
+    if (cameFromSite) {
+      router.back();
+    } else {
+      router.push("/shop");
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-stone-950">
-      {/* Breadcrumbs */}
-      <nav aria-label="Breadcrumb" className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-        <ol className="flex flex-wrap items-center gap-1 text-sm text-stone-500 dark:text-stone-400">
+      {/* Back button + breadcrumbs */}
+      <div className="mx-auto w-full max-w-7xl px-4 pt-24 sm:px-6 lg:px-8">
+        <button
+          type="button"
+          onClick={handleBack}
+          aria-label={t.product.back}
+          className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm transition-colors hover:border-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:border-emerald-400 dark:hover:bg-stone-800 dark:hover:text-emerald-300 dark:focus-visible:ring-offset-stone-950"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          {t.product.back}
+        </button>
+        <nav aria-label="Breadcrumb" className="mt-3">
+          <ol className="flex flex-wrap items-center gap-1 text-sm text-stone-500 dark:text-stone-400">
           <li>
             <Link href="/" className="transition-colors hover:text-emerald-700 dark:hover:text-emerald-300">
               {t.product.breadcrumbHome}
@@ -110,8 +135,9 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
           <li aria-current="page" className="max-w-[50vw] truncate font-medium text-stone-800 dark:text-stone-200 sm:max-w-md">
             {name}
           </li>
-        </ol>
-      </nav>
+          </ol>
+        </nav>
+      </div>
 
       {/* Product */}
       <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
