@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!product) {
     return { title: "Product not found" };
   }
-  const title = `${product.nameEn} — ${product.price.toFixed(2).replace(".", ",")} €`;
+  const title = `${product.nameEn} — ${product.price.toFixed(2)} €`;
   return {
     title,
     description: product.descEn,

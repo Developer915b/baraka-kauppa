@@ -211,7 +211,7 @@ export function CartSheet() {
 
   const inputCls =
     "h-11 rounded-xl border-stone-200 focus-visible:ring-emerald-600 dark:border-stone-700 dark:bg-stone-900";
-  const fmt = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
+  const fmt = (n: number) => `${n.toFixed(2)} €`;
 
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>

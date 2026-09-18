@@ -141,11 +141,11 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
         <div className="mt-auto flex flex-col gap-2.5 pt-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <span className="whitespace-nowrap text-lg font-bold text-emerald-800 dark:text-emerald-300">
-              {product.price.toFixed(2).replace(".", ",")} €
+              {product.price.toFixed(2)} €
             </span>
             {discounted && (
               <span className="whitespace-nowrap text-sm text-stone-400 line-through dark:text-stone-500">
-                {oldPrice.toFixed(2).replace(".", ",")} €
+                {oldPrice.toFixed(2)} €
               </span>
             )}
           </div>

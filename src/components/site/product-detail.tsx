@@ -62,7 +62,7 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
     : 0;
   const savings = discounted ? Math.round((oldPrice - product.price) * 100) / 100 : 0;
 
-  const fmt = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
+  const fmt = (n: number) => `${n.toFixed(2)} €`;
 
   const handleAdd = () => {
     addItem({

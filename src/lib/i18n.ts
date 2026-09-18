@@ -455,7 +455,7 @@ export const translations = {
       emailPlaceholder: "sinä@esimerkki.fi",
       methodTitle: "Miten haluat tilauksesi?",
       delivery: "Kotiinkuljetus",
-      deliveryDesc: "4,90 € — ilmainen yli 40 € · Kouvolan alue",
+      deliveryDesc: "4.90 € — ilmainen yli 40 € · Kouvolan alue",
       pickup: "Nouto kaupasta",
       pickupDesc: "Ilmainen — Kouvolankatu 34 A31",
       addressTitle: "Toimitusosoite",
@@ -501,7 +501,7 @@ export const translations = {
       inStock: "Varastossa",
       description: "Kuvaus",
       deliveryText:
-        "Kotiinkuljetus 4,90 € Kouvolan alueella — ilmainen yli 40 € tilauksissa. Maksu toimituksen yhteydessä.",
+        "Kotiinkuljetus 4.90 € Kouvolan alueella — ilmainen yli 40 € tilauksissa. Maksu toimituksen yhteydessä.",
       pickupText: "Ilmainen nouto kaupasta Kouvolankatu 34 A31 — valmiina kun saavut.",
       qualityText:
         "Huolella valittuja ja laadukkaita elintarvikkeita. Sertifioitu halal-valikoima ja tuoretta tavaraa viikoittain.",

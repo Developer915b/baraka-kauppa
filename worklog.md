@@ -1,6 +1,21 @@
 # Worklog
 
 ---
+Task ID: 9
+Agent: Main agent (Super Z)
+Task: Change price decimal separator from comma to full stop ("6,90 €" -> "6.90 €") everywhere.
+
+Work Log:
+- Replaced `.toFixed(2).replace(".", ",")` with plain `.toFixed(2)` in 4 formatters: product-card (price + oldPrice), product-detail fmt, cart-sheet fmt, product/[slug] metadata title
+- Updated 2 hardcoded FI delivery strings in i18n.ts to dot decimals: checkout deliveryDesc "4.90 € — ilmainen yli 40 €", product deliveryText "Kotiinkuljetus 4.90 € ..."
+- Sweep confirmed no remaining comma-decimal prices in src/
+- Verified in browser: shop card prices (2.50 €, 1.80 €, 3.90 €, 2.90 €), product page price/title "6.90 €", cart drawer line/subtotal/total all "6.90 €"; biome + tsc clean
+
+Stage Summary:
+- All price displays now use dot decimals consistently (price tags, discounts, cart, checkout, metadata titles, FI delivery texts)
+- Pushed to github.com/Developer915b/baraka-kauppa (main)
+
+---
 Task ID: 1
 Agent: Main agent (Super Z)
 Task: Check Facebook page, extract business details, generate high-quality images, and build a full frontend website for Baraka Kauppa (EN default + FI).
