@@ -46,3 +46,19 @@ Stage Summary:
 - Site is now a complete online store + marketing page, bilingual EN/FI, mobile-first responsive
 - DB: 18 products, orders table working (empty after test cleanup)
 - Ready for GitHub push
+
+---
+Task ID: 3
+Agent: Main agent (Super Z)
+Task: Push all project files to a new private GitHub repo using a new token (account Developer915b).
+
+Work Log:
+- Verified new token via GitHub API -> account Developer915b (no existing repos)
+- Created new private repo Developer915b/baraka-kauppa via POST /user/repos
+- Re-pointed origin remote to https://github.com/Developer915b/baraka-kauppa.git with new token
+- Pushed main branch (commit 1d7f7a8: full online store + bilingual website) + tags
+- Verified remote: repo private, default branch main, full commit history, all top-level files present (.gitignore, README.md, package.json, prisma/, public/, src/, tests/, worklog.md, etc.)
+
+Stage Summary:
+- All code + docs pushed to https://github.com/Developer915b/baraka-kauppa (private)
+- Working tree clean, branch main tracking origin/main
