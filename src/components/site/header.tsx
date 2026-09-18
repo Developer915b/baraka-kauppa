@@ -69,8 +69,11 @@ function ThemeToggle({ solid }: { solid: boolean }) {
 
 export function Header() {
   const { t, locale, setLocale } = useLanguage();
+  const mounted = useMounted();
   const { items, openCart } = useCart();
-  const count = cartCount(items);
+  // Persisted cart rehydrates from localStorage before React hydrates —
+  // start at 0 for the first (server-matching) paint, then show the real count.
+  const count = mounted ? cartCount(items) : 0;
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [scrolled, setScrolled] = useState(false);

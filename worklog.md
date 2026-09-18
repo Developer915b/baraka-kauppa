@@ -135,6 +135,23 @@ Stage Summary:
 - Pushed to github.com/Developer915b/baraka-kauppa (main)
 
 ---
+Task ID: 8
+Agent: Main agent (Super Z)
+Task: Diagnose and fix the reported React hydration error on the homepage.
+
+Work Log:
+- Diagnosed the user-reported error: diff showed the layout wrapper div replaced by `id="definer-bubble-host" data-definer-bubble-ready="true"` with an injected fixed-position style — attributes injected by the visitor's "Definer" browser extension before React hydrates (the error text itself lists this category)
+- Fix 1 (extension resilience): added suppressHydrationWarning to the layout wrapper div in layout.tsx — extension-injected attributes on that element no longer break hydration (same documented pattern as next-themes on <html>)
+- Fix 2 (real app-side mismatch source found in audit): header cart badge read the zustand persisted cart synchronously — with sync localStorage the store rehydrates before React hydration, so server rendered count 0 / badge absent while client first render showed the persisted count (badge + aria-label mismatch) whenever the cart had items; gated with the existing useMounted() (useSyncExternalStore) so first paint always matches the server, then the real count (e.g. "Ostoskori (2)") pops in after mount
+- Audit of all other hydration surfaces: LanguageProvider safe (useSyncExternalStore + constant getServerSnapshot "en"), cart-sheet renders item content only when open (isOpen not persisted), product-card/product-detail use action selectors only, no Date.now/Math.random/toLocaleString/typeof-window branches in src/
+- Tests: seeded localStorage with 2-item cart + FI locale, reloaded /shop and /product pages — zero page errors, zero hydration/console warnings, badge renders correct localized count after mount; biome clean, tsc clean (src), NETLIFY=true production build OK
+
+Stage Summary:
+- Hydration error fixed both ways: extension-caused (suppressHydrationWarning on wrapper div) and the app's own persisted-cart badge mismatch (mounted-gated count)
+- No behavioral regressions: cart count, aria-label, and badge still show the real values right after mount
+- Pushed to github.com/Developer915b/baraka-kauppa (main)
+
+---
 Task ID: 7
 Agent: Main agent (Super Z)
 Task: Add a back button to the product detail page (user: "not seeing any back page going button in product detailed page") and push.

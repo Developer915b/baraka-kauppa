@@ -109,7 +109,10 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <LanguageProvider>
-            <div className="flex min-h-screen flex-col overflow-x-hidden bg-white dark:bg-stone-950">
+            <div
+              suppressHydrationWarning
+              className="flex min-h-screen flex-col overflow-x-hidden bg-white dark:bg-stone-950"
+            >
               <Header />
               <main className="flex-1">{children}</main>
               <Footer />
