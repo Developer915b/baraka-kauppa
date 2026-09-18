@@ -69,3 +69,5 @@ download
 
 # sqlite database
 db/*.db
+scripts/ui-*.png
+scripts/check-*.png
