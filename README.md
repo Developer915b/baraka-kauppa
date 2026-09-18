@@ -23,15 +23,18 @@ A bilingual (English 🇬🇧 / Finnish 🇫🇮) marketing website + online sto
 ## Features
 
 ### Website
+- **Multi-page structure** — `/` (home: hero, features, gallery, CTA), `/shop` (categories + full online store), `/contact` (About + Visit + Contact merged); per-page metadata titles
+- **Dark / light theme** — toggle in the header and in the mobile menu (`next-themes`, class strategy); **light is the default**; preference persisted; every page audited for contrast, hidden text and consistent dark variants
 - **Bilingual UI** — English (default) ↔ Finnish (Suomi) toggle in the header; preference persisted in `localStorage` and kept in sync with `<html lang>`
-- **Fully responsive, mobile-first UI** — verified at 390 px, 768 px and 1280 px widths; touch-friendly 44 px+ targets; sticky header and sticky footer
-- **Sections** — animated hero, feature bar, About (story, community quote, company facts), cuisine categories, photo gallery, Visit (address/hours/directions), Contact (phone / email / Facebook), footer
-- **23 AI-generated photographs** — hero, store interior, 6 cuisine-category shots, 3 gallery images and 12 product photos
+- **Fully responsive, mobile-first UI** — verified at 320 px, 390 px, 768 px and 1280 px widths; no horizontal overflow anywhere; stacked price + full-width buttons on product cards; touch-friendly 44 px+ targets
+- **Solid header on interior pages** — the transparent-over-hero header style is only used on the home page, so nav is always readable
+- **AI-generated photography** — hero, store interior, 6 cuisine-category shots, 3 gallery images and 18 product photos — **every product has its own unique image**
 
-### Online Store
+### Online Store (page /shop)
 - **Product catalogue** — 18 products across 7 categories (Asian Pantry, Chinese Kitchen, Thai Essentials, Arabic & Middle East, African Flavours, Halal Meat, Spices & Pantry), bilingual names & descriptions, prices in EUR
+- **Category deep links** — the cuisine cards link to `/shop?category=…` and pre-select the matching filter tab
 - **Search** — debounced full-text search across names and descriptions (EN + FI)
-- **Category filtering** — sticky, horizontally scrollable filter chips on mobile
+- **Category filtering** — horizontally scrollable filter chips on mobile (hidden scrollbar, snap points)
 - **Shopping cart** — Zustand store persisted in `localStorage`; slide-in drawer with quantity steppers, remove, clear, live subtotal
 - **Checkout** — delivery (€4.90, free over €40) or free in-store pickup; validated form (name, phone, email, address, notes); order totals computed **server-side**
 - **Order persistence** — every order is stored in SQLite via Prisma with a unique order number (`BK-XXXXXXXXXX`) and returned to the customer on the success screen
@@ -145,10 +148,13 @@ deployment. The app handles this automatically:
 | Order pricing | Server-side, from DB | Server-side, from static catalog (same rules) |
 | Order storage | `Order` table in SQLite | **Netlify Forms** submission |
 
-Orders on Netlify are delivered to the shop owner through a hidden
-[Netlify Form](https://docs.netlify.com/forms/setup/) (`orders`) rendered on
-the home page. After checkout, the cart drawer POSTs the order details to it;
-submissions appear in **Netlify dashboard → Forms → orders**.
+Orders on Netlify are delivered to the shop owner through a
+[Netlify Form](https://docs.netlify.com/forms/setup/) named `orders`, declared
+in the **static file `public/orders-form.html`** (required by
+`@netlify/plugin-nextjs` v5 — the runtime no longer detects forms inside
+prerendered Next.js pages). After checkout, the cart drawer POSTs the order
+details to `/orders-form.html`; submissions appear in
+**Netlify dashboard → Forms → orders**.
 
 **To get order emails:** Netlify dashboard → Forms → orders →
 *Settings → Form notifications → Add email notification* → send to

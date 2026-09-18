@@ -152,7 +152,8 @@ export function CartSheet() {
     }
   };
 
-  const inputCls = "h-11 rounded-xl border-stone-200 focus-visible:ring-emerald-600";
+  const inputCls =
+    "h-11 rounded-xl border-stone-200 focus-visible:ring-emerald-600 dark:border-stone-700 dark:bg-stone-900";
   const fmt = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
 
   return (
@@ -183,23 +184,23 @@ export function CartSheet() {
         {step === "cart" &&
           (items.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-stone-100">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800">
                 <ShoppingBasket className="h-8 w-8 text-stone-400" aria-hidden="true" />
               </span>
-              <p className="text-lg font-semibold text-stone-800">{t.cart.empty}</p>
-              <p className="text-sm text-stone-500">{t.cart.emptyHint}</p>
+              <p className="text-lg font-semibold text-stone-800 dark:text-stone-100">{t.cart.empty}</p>
+              <p className="text-sm text-stone-500 dark:text-stone-400">{t.cart.emptyHint}</p>
               <Button
                 asChild
                 className="mt-2 rounded-full bg-emerald-700 hover:bg-emerald-800"
                 onClick={closeCart}
               >
-                <a href="#shop">{t.cart.browse}</a>
+                <a href="/shop">{t.cart.browse}</a>
               </Button>
             </div>
           ) : (
             <>
               <ScrollArea className="min-h-0 flex-1 px-5">
-                <ul className="divide-y divide-stone-100 py-2">
+                <ul className="divide-y divide-stone-100 py-2 dark:divide-stone-800">
                   {items.map((item) => (
                     <li key={item.productId} className="flex gap-3 py-4">
                       <img
@@ -208,10 +209,10 @@ export function CartSheet() {
                         className="h-16 w-16 shrink-0 rounded-xl object-cover"
                       />
                       <div className="flex min-w-0 flex-1 flex-col">
-                        <p className="truncate text-sm font-semibold text-stone-900">
+                        <p className="truncate text-sm font-semibold text-stone-900 dark:text-stone-100">
                           {locale === "fi" ? item.nameFi : item.nameEn}
                         </p>
-                        <p className="text-xs text-stone-400">{item.unit}</p>
+                        <p className="text-xs text-stone-400 dark:text-stone-500">{item.unit}</p>
                         <div className="mt-2 flex items-center justify-between">
                           <div className="flex items-center gap-1">
                             <Button
@@ -238,14 +239,14 @@ export function CartSheet() {
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="ml-1 h-8 w-8 rounded-full text-stone-400 hover:text-red-600"
+                              className="ml-1 h-8 w-8 rounded-full text-stone-400 hover:text-red-600 dark:hover:text-red-400"
                               onClick={() => removeItem(item.productId)}
                               aria-label={t.cart.remove}
                             >
                               <Trash2 className="h-4 w-4" aria-hidden="true" />
                             </Button>
                           </div>
-                          <span className="text-sm font-bold text-emerald-800">
+                          <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
                             {fmt(item.price * item.qty)}
                           </span>
                         </div>
@@ -257,26 +258,26 @@ export function CartSheet() {
                   variant="ghost"
                   size="sm"
                   onClick={clear}
-                  className="mx-auto mb-4 block text-xs text-stone-400 hover:text-red-600"
+                  className="mx-auto mb-4 block text-xs text-stone-400 hover:text-red-600 dark:hover:text-red-400"
                 >
                   {t.cart.clear}
                 </Button>
               </ScrollArea>
 
-              <SheetFooter className="border-t border-stone-100 p-5">
+              <SheetFooter className="border-t border-stone-100 p-5 dark:border-stone-800">
                 {subtotal < FREE_THRESHOLD && (
-                  <p className="mb-1 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                  <p className="mb-1 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:bg-amber-400/10 dark:text-amber-300">
                     <Truck className="h-4 w-4 shrink-0" aria-hidden="true" />
                     {t.cart.freeDeliveryHint}
                   </p>
                 )}
                 <div className="space-y-1.5 text-sm">
-                  <div className="flex justify-between text-stone-600">
+                  <div className="flex justify-between text-stone-600 dark:text-stone-400">
                     <span>{t.cart.subtotal}</span>
                     <span className="font-medium">{fmt(subtotal)}</span>
                   </div>
                   <Separator className="my-2" />
-                  <div className="flex justify-between text-base font-bold text-stone-900">
+                  <div className="flex justify-between text-base font-bold text-stone-900 dark:text-stone-50">
                     <span>{t.cart.total}</span>
                     <span>{fmt(subtotal)}</span>
                   </div>
@@ -296,11 +297,11 @@ export function CartSheet() {
         {step === "checkout" && (
           <>
             <ScrollArea className="min-h-0 flex-1 px-5 py-4">
-              <p className="text-sm text-stone-600">{t.checkout.subtitle}</p>
+              <p className="text-sm text-stone-600 dark:text-stone-400">{t.checkout.subtitle}</p>
 
               {/* Contact */}
               <fieldset className="mt-5 space-y-3">
-                <legend className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+                <legend className="text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
                   {t.checkout.contactTitle}
                 </legend>
                 <div>
@@ -348,7 +349,7 @@ export function CartSheet() {
 
               {/* Method */}
               <fieldset className="mt-5">
-                <legend className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
+                <legend className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
                   {t.checkout.methodTitle}
                 </legend>
                 <div className="grid gap-3">
@@ -359,22 +360,22 @@ export function CartSheet() {
                     className={cn(
                       "flex items-start gap-3 rounded-2xl border-2 p-4 text-left transition-colors",
                       method === "delivery"
-                        ? "border-emerald-700 bg-emerald-50"
-                        : "border-stone-200 hover:border-stone-300"
+                        ? "border-emerald-700 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-900/30"
+                        : "border-stone-200 hover:border-stone-300 dark:border-stone-700 dark:hover:border-stone-600"
                     )}
                   >
                     <Truck
                       className={cn(
                         "mt-0.5 h-5 w-5 shrink-0",
-                        method === "delivery" ? "text-emerald-700" : "text-stone-400"
+                        method === "delivery" ? "text-emerald-700 dark:text-emerald-300" : "text-stone-400"
                       )}
                       aria-hidden="true"
                     />
                     <span>
-                      <span className="block text-sm font-semibold text-stone-900">
+                      <span className="block text-sm font-semibold text-stone-900 dark:text-stone-100">
                         {t.checkout.delivery}
                       </span>
-                      <span className="mt-0.5 block text-xs leading-relaxed text-stone-500">
+                      <span className="mt-0.5 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">
                         {t.checkout.deliveryDesc}
                       </span>
                     </span>
@@ -386,22 +387,22 @@ export function CartSheet() {
                     className={cn(
                       "flex items-start gap-3 rounded-2xl border-2 p-4 text-left transition-colors",
                       method === "pickup"
-                        ? "border-emerald-700 bg-emerald-50"
-                        : "border-stone-200 hover:border-stone-300"
+                        ? "border-emerald-700 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-900/30"
+                        : "border-stone-200 hover:border-stone-300 dark:border-stone-700 dark:hover:border-stone-600"
                     )}
                   >
                     <Store
                       className={cn(
                         "mt-0.5 h-5 w-5 shrink-0",
-                        method === "pickup" ? "text-emerald-700" : "text-stone-400"
+                        method === "pickup" ? "text-emerald-700 dark:text-emerald-300" : "text-stone-400"
                       )}
                       aria-hidden="true"
                     />
                     <span>
-                      <span className="block text-sm font-semibold text-stone-900">
+                      <span className="block text-sm font-semibold text-stone-900 dark:text-stone-100">
                         {t.checkout.pickup}
                       </span>
-                      <span className="mt-0.5 block text-xs leading-relaxed text-stone-500">
+                      <span className="mt-0.5 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">
                         {t.checkout.pickupDesc}
                       </span>
                     </span>
@@ -468,16 +469,16 @@ export function CartSheet() {
                   value={form.notes}
                   onChange={(e) => set("notes")(e.target.value)}
                   placeholder={t.checkout.notesPlaceholder}
-                  className="mt-1 min-h-20 rounded-xl border-stone-200 focus-visible:ring-emerald-600"
+                  className="mt-1 min-h-20 rounded-xl border-stone-200 focus-visible:ring-emerald-600 dark:border-stone-700 dark:bg-stone-900"
                 />
               </div>
 
               {/* Summary */}
-              <div className="mt-5 rounded-2xl bg-stone-50 p-4 ring-1 ring-stone-200/70">
-                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+              <div className="mt-5 rounded-2xl bg-stone-50 p-4 ring-1 ring-stone-200/70 dark:bg-stone-900 dark:ring-stone-800">
+                <p className="text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
                   {t.checkout.orderSummary}
                 </p>
-                <ul className="mt-2 space-y-1 text-sm text-stone-700">
+                <ul className="mt-2 space-y-1 text-sm text-stone-700 dark:text-stone-300">
                   {items.map((i) => (
                     <li key={i.productId} className="flex justify-between gap-2">
                       <span className="truncate">
@@ -489,17 +490,17 @@ export function CartSheet() {
                 </ul>
                 <Separator className="my-2" />
                 <div className="space-y-1 text-sm">
-                  <div className="flex justify-between text-stone-600">
+                  <div className="flex justify-between text-stone-600 dark:text-stone-400">
                     <span>{t.cart.subtotal}</span>
                     <span>{fmt(subtotal)}</span>
                   </div>
-                  <div className="flex justify-between text-stone-600">
+                  <div className="flex justify-between text-stone-600 dark:text-stone-400">
                     <span>{t.cart.deliveryFee}</span>
-                    <span className={cn(fee === 0 && "font-semibold text-lime-600")}>
+                    <span className={cn(fee === 0 && "font-semibold text-lime-600 dark:text-lime-400")}>
                       {fee === 0 ? t.cart.freeTag : fmt(fee)}
                     </span>
                   </div>
-                  <div className="flex justify-between pt-1 text-base font-bold text-stone-900">
+                  <div className="flex justify-between pt-1 text-base font-bold text-stone-900 dark:text-stone-50">
                     <span>{t.cart.total}</span>
                     <span>{fmt(total)}</span>
                   </div>
@@ -509,18 +510,18 @@ export function CartSheet() {
               {errorMsg && (
                 <p
                   role="alert"
-                  className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-200"
+                  className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900"
                 >
                   {errorMsg}
                 </p>
               )}
             </ScrollArea>
 
-            <SheetFooter className="border-t border-stone-100 p-5">
+            <SheetFooter className="border-t border-stone-100 p-5 dark:border-stone-800">
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  className="h-12 shrink-0 rounded-full border-stone-300 px-4 text-stone-600 hover:bg-stone-50"
+                  className="h-12 shrink-0 rounded-full border-stone-300 px-4 text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
                   onClick={() => {
                     setErrorMsg(null);
                     setStep("cart");
@@ -551,25 +552,25 @@ export function CartSheet() {
         {/* ---------------- SUCCESS STEP ---------------- */}
         {step === "success" && success && (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-lime-100">
-              <CheckCircle2 className="h-9 w-9 text-lime-600" aria-hidden="true" />
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-lime-100 dark:bg-lime-900/40">
+              <CheckCircle2 className="h-9 w-9 text-lime-600 dark:text-lime-400" aria-hidden="true" />
             </span>
             <div>
-              <h2 className="flex items-center justify-center gap-2 text-xl font-bold text-stone-900">
+              <h2 className="flex items-center justify-center gap-2 text-xl font-bold text-stone-900 dark:text-stone-50">
                 <PartyPopper className="h-5 w-5 text-amber-500" aria-hidden="true" />
                 {t.checkout.successTitle}
               </h2>
-              <p className="mt-2 text-sm text-stone-600">{t.checkout.successText}</p>
+              <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">{t.checkout.successText}</p>
             </div>
-            <div className="w-full rounded-2xl bg-stone-50 p-4 ring-1 ring-stone-200/70">
-              <p className="text-xs uppercase tracking-wide text-stone-500">
+            <div className="w-full rounded-2xl bg-stone-50 p-4 ring-1 ring-stone-200/70 dark:bg-stone-900 dark:ring-stone-800">
+              <p className="text-xs uppercase tracking-wide text-stone-500 dark:text-stone-400">
                 {t.checkout.orderNo}
               </p>
-              <p className="text-lg font-bold text-emerald-800">{success.orderNo}</p>
+              <p className="text-lg font-bold text-emerald-800 dark:text-emerald-300">{success.orderNo}</p>
               <Separator className="my-3" />
               <div className="flex justify-between text-sm">
-                <span className="text-stone-600">{t.checkout.successTotal}</span>
-                <span className="text-lg font-bold text-stone-900">{fmt(success.total)}</span>
+                <span className="text-stone-600 dark:text-stone-400">{t.checkout.successTotal}</span>
+                <span className="text-lg font-bold text-stone-900 dark:text-stone-50">{fmt(success.total)}</span>
               </div>
             </div>
             <Button

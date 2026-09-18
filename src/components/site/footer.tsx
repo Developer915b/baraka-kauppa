@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { MapPin, ShoppingBasket, Phone, Mail, Globe } from "lucide-react";
 import { useLanguage } from "@/components/site/language-provider";
 
@@ -9,12 +10,9 @@ export function Footer() {
   const { t } = useLanguage();
 
   const links = [
-    { key: "about" as const, href: "#about" },
-    { key: "products" as const, href: "#products" },
-    { key: "shop" as const, href: "#shop" },
-    { key: "gallery" as const, href: "#gallery" },
-    { key: "visit" as const, href: "#visit" },
-    { key: "contact" as const, href: "#contact" },
+    { key: "home" as const, href: "/" },
+    { key: "shop" as const, href: "/shop" },
+    { key: "contact" as const, href: "/contact" },
   ];
 
   const linkLabel = (key: string) => {
@@ -25,7 +23,7 @@ export function Footer() {
   return (
     <footer className="mt-auto bg-stone-950 text-stone-300">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2.5">
@@ -52,14 +50,24 @@ export function Footer() {
             <ul className="mt-4 space-y-2.5">
               {links.map((l) => (
                 <li key={l.key}>
-                  <a
+                  <Link
                     href={l.href}
-                    className="text-sm text-stone-400 transition-colors hover:text-amber-300"
+                    className="inline-block py-0.5 text-sm text-stone-400 transition-colors hover:text-amber-300"
                   >
                     {linkLabel(l.key)}
-                  </a>
+                  </Link>
                 </li>
               ))}
+              <li>
+                <a
+                  href={FB_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block py-0.5 text-sm text-stone-400 transition-colors hover:text-amber-300"
+                >
+                  Facebook
+                </a>
+              </li>
             </ul>
           </nav>
 

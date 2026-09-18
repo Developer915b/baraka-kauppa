@@ -13,7 +13,7 @@ export function Gallery() {
   const { t } = useLanguage();
 
   return (
-    <section id="gallery" className="scroll-mt-20 bg-white py-20 sm:py-24">
+    <section id="gallery" className="scroll-mt-20 bg-white py-20 dark:bg-stone-950 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -22,13 +22,13 @@ export function Gallery() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <p className="text-sm font-semibold uppercase tracking-widest text-amber-600">
+          <p className="text-sm font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400">
             {t.gallery.label}
           </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl">
             {t.gallery.title}
           </h2>
-          <p className="mt-4 text-lg leading-relaxed text-stone-600">
+          <p className="mt-4 text-lg leading-relaxed text-stone-600 dark:text-stone-400">
             {t.gallery.subtitle}
           </p>
         </motion.div>

@@ -8,7 +8,7 @@ export function About() {
   const { t } = useLanguage();
 
   return (
-    <section id="about" className="scroll-mt-20 bg-white py-20 sm:py-24">
+    <section id="about" className="scroll-mt-20 bg-white py-20 dark:bg-stone-950 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Image side */}
@@ -27,7 +27,7 @@ export function About() {
               />
             </div>
             {/* Floating badge */}
-            <div className="absolute -bottom-6 -right-4 rounded-2xl bg-emerald-700 px-6 py-4 text-white shadow-lg sm:right-6">
+            <div className="absolute -bottom-6 -right-4 rounded-2xl bg-emerald-700 px-6 py-4 text-white shadow-lg dark:bg-emerald-600 sm:right-6">
               <p className="text-2xl font-bold">2026</p>
               <p className="text-sm text-emerald-100">Kouvola&apos;s newest market</p>
             </div>
@@ -41,27 +41,27 @@ export function About() {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6 }}
           >
-            <p className="text-sm font-semibold uppercase tracking-widest text-amber-600">
+            <p className="text-sm font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400">
               {t.about.label}
             </p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl">
               {t.about.title}
             </h2>
             <div className="mt-6 space-y-4">
               {t.about.paragraphs.map((p, i) => (
-                <p key={i} className="leading-relaxed text-stone-600">
+                <p key={i} className="leading-relaxed text-stone-600 dark:text-stone-400">
                   {p}
                 </p>
               ))}
             </div>
 
             {/* Community quote */}
-            <figure className="mt-8 rounded-2xl border-l-4 border-amber-400 bg-stone-50 p-5">
+            <figure className="mt-8 rounded-2xl border-l-4 border-amber-400 bg-stone-50 p-5 dark:bg-stone-900">
               <Quote className="h-5 w-5 text-amber-500" aria-hidden="true" />
-              <blockquote className="mt-2 text-base italic leading-relaxed text-stone-700">
+              <blockquote className="mt-2 text-base italic leading-relaxed text-stone-700 dark:text-stone-300">
                 {t.about.quote}
               </blockquote>
-              <figcaption className="mt-2 text-sm text-stone-500">
+              <figcaption className="mt-2 text-sm text-stone-500 dark:text-stone-400">
                 {t.about.quoteSource}
               </figcaption>
             </figure>
@@ -71,12 +71,12 @@ export function About() {
               {t.about.facts.map((fact) => (
                 <div
                   key={fact.label}
-                  className="rounded-xl bg-stone-50 px-4 py-3 ring-1 ring-stone-200/70"
+                  className="rounded-xl bg-stone-50 px-4 py-3 ring-1 ring-stone-200/70 dark:bg-stone-900 dark:ring-stone-800"
                 >
-                  <dt className="text-xs font-medium uppercase tracking-wide text-stone-500">
+                  <dt className="text-xs font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">
                     {fact.label}
                   </dt>
-                  <dd className="mt-0.5 text-sm font-semibold text-stone-900">
+                  <dd className="mt-0.5 text-sm font-semibold text-stone-900 dark:text-stone-100">
                     {fact.value}
                   </dd>
                 </div>

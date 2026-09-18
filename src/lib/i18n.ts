@@ -64,6 +64,7 @@ export const translations = {
     },
     categories: {
       label: "Our Selection",
+      browse: "Browse products",
       title: "Groceries from Around the World",
       subtitle:
         "Six cuisine regions, hundreds of authentic ingredients — sourced with care and priced fairly.",
@@ -194,6 +195,17 @@ export const translations = {
       newOrder: "Place another order",
       error: "Something went wrong. Please check your details and try again.",
     },
+    homeCta: {
+      title: "World groceries, delivered to your door",
+      text: "Order online and pay on delivery, or pick up your order in the store — ready when you arrive.",
+      shop: "Visit the Online Store",
+      contact: "Contact Us",
+    },
+    theme: {
+      toggle: "Switch theme",
+      light: "Light",
+      dark: "Dark",
+    },
     visit: {
       label: "Visit Us",
       title: "Find Us in Kouvola",
@@ -301,6 +313,7 @@ export const translations = {
     },
     categories: {
       label: "Valikoimamme",
+      browse: "Selaa tuotteita",
       title: "Ruokaa ympäri maailman",
       subtitle:
         "Kuusi ruokakulttuuria, satoja aitoja aineksia — huolella valittuna ja kohtuuhintaan.",
@@ -430,6 +443,17 @@ export const translations = {
       successTotal: "Maksettava yhteensä",
       newOrder: "Tee uusi tilaus",
       error: "Jokin meni pieleen. Tarkista tiedot ja yritä uudelleen.",
+    },
+    homeCta: {
+      title: "Maailman maut kotiin tai noudettavaksi",
+      text: "Tilaa verkossa ja maksa toimituksen yhteydessä, tai nouda tilauksesi myymälästä — valmiina kun saavut.",
+      shop: "Verkkokauppaan",
+      contact: "Ota yhteyttä",
+    },
+    theme: {
+      toggle: "Vaihda teemaa",
+      light: "Vaalea",
+      dark: "Tumma",
     },
     visit: {
       label: "Tule käymään",

@@ -2,6 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/site/theme-provider";
+import { LanguageProvider } from "@/components/site/language-provider";
+import { Header } from "@/components/site/header";
+import { Footer } from "@/components/site/footer";
+import { CartSheet } from "@/components/site/cart-sheet";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +19,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Baraka Kauppa | International & Halal Grocery Store in Kouvola",
+  title: {
+    default: "Baraka Kauppa | International & Halal Grocery Store in Kouvola",
+    template: "%s | Baraka Kauppa",
+  },
   description:
     "Baraka Kauppa is Kouvola's new international mini market — Asian, Chinese, Thai, Arabic and African groceries plus certified halal foods. Open 7 days a week.",
   keywords: [
@@ -55,7 +63,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
+        <ThemeProvider>
+          <LanguageProvider>
+            <div className="flex min-h-screen flex-col overflow-x-hidden bg-white dark:bg-stone-950">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <CartSheet />
+            </div>
+          </LanguageProvider>
+        </ThemeProvider>
         <Toaster />
       </body>
     </html>

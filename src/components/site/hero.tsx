@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, MapPin, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,28 +59,28 @@ export function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-8 flex flex-wrap items-center gap-4"
+            className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4"
           >
             <Button
               asChild
               size="lg"
-              className="h-12 rounded-full bg-amber-400 px-7 text-base font-semibold text-emerald-950 shadow-lg shadow-amber-500/25 hover:bg-amber-300"
+              className="h-12 w-full rounded-full bg-amber-400 px-7 text-base font-semibold text-emerald-950 shadow-lg shadow-amber-500/25 hover:bg-amber-300 sm:w-auto"
             >
-              <a href="#products">
+              <Link href="/shop">
                 {t.hero.ctaPrimary}
                 <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
-              </a>
+              </Link>
             </Button>
             <Button
               asChild
               size="lg"
               variant="outline"
-              className="h-12 rounded-full border-white/40 bg-white/10 px-7 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
+              className="h-12 w-full rounded-full border-white/40 bg-white/10 px-7 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/20 hover:text-white sm:w-auto"
             >
-              <a href="#visit">
+              <Link href="/contact">
                 <MapPin className="mr-2 h-5 w-5" aria-hidden="true" />
                 {t.hero.ctaSecondary}
-              </a>
+              </Link>
             </Button>
           </motion.div>
 

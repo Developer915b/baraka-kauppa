@@ -86,3 +86,27 @@ Stage Summary:
 - Netlify-ready: Git-connected deploy works with zero manual settings (netlify.toml)
 - Store fully functional on serverless (catalog fallback + Netlify Forms orders)
 - Self-hosted DB mode unchanged and verified
+
+---
+Task ID: 5
+Agent: Main agent (Super Z)
+Task: Complete multi-page refactor + mobile UI overhaul, add dark/light theme (default light), audit theming on all pages, fix Netlify Forms v5 plugin error, generate unique product images, push with git email t1kdv7@gmail.com.
+
+Work Log:
+- Netlify fix: plugin v5 fails on data-netlify forms inside prerendered Next HTML ("Failed assembling prerendered content"). Moved the form to static public/orders-form.html (hidden form + all order fields), removed it from page.tsx, cart-sheet now POSTs to /orders-form.html
+- Unique images: generated 7 new product photos (prod-green-curry, prod-cassava, prod-wings, prod-turmeric, prod-cumin, prod-coriander, prod-bariis) via scripts/gen-unique-images.mjs; updated catalog.ts + seed-products.ts; re-seeded DB — verified 0 duplicate image paths across 18 products
+- Multi-page refactor: layout.tsx now hosts ThemeProvider + LanguageProvider + Header + Footer + CartSheet; pages: / (Hero, Features, Gallery, new HomeCta), /shop (Shop + Categories, per-page metadata, Suspense for useSearchParams), /contact (About + Visit + Contact merged)
+- Menu merged: nav = Home / Shop / Contact with usePathname active states (desktop + mobile); footer links updated; hero CTAs -> /shop and /contact; category cards deep-link /shop?category=key; Shop syncs tab to ?category=
+- Mobile UI: product-card footer stacked on mobile (price line + full-width Add-to-cart button — fixes clipped "Add to car" and price wrap), tabs no-scrollbar + snap + edge bleed, hero CTAs stack full-width, header compact at 320px (text-base logo at <400px), mobile menu rows for language + theme, Facebook icon now lg-only in header
+- Dark/light theme: next-themes (class, default light, system off), theme-provider.tsx, warm-stone dark tokens + color-scheme in globals.css, no-scrollbar utility, overflow-x clip; dark: variants added across features/about/categories/shop/gallery/visit/contact/cart-sheet/header; useMounted via useSyncExternalStore (lint-safe)
+- Header: solid style on interior pages (fixes white-on-white transparent header over light content); transparent only over home hero
+- i18n: added homeCta.{title,text,shop,contact}, categories.browse, theme.{toggle,light,dark} (EN+FI)
+- Fixed a mid-edit corruption in header.tsx (duplicate broken Header wrapper + mangled effect) — file now clean, single Header export
+- Tests: lint clean, tsc clean (src), NETLIFY=true build OK (/ /shop /contact static + APIs dynamic); serverless sim: all pages 200 incl /shop?category=halal, orders-form.html served with data-netlify, catalog fallback (2 halal products, images unique), order ok persisted:false; browser E2E desktop 1280 + mobile 390 + 320: no overflow on any page in light AND dark, dark cart/checkout/success verified (order BK-MU6VY57591 7.80€), theme + locale persistence, deep-link tab sync, FI dark menu verified; zero console errors; test order cleaned (orders=0)
+
+Stage Summary:
+- Site is now a themed, multi-page store: /, /shop (merged products+shop), /contact (merged about+visit+contact)
+- Default light theme, fully audited dark theme, mobile-first polish at 320-1280px
+- Netlify Forms v5 incompatibility resolved via static form file
+- All 18 products have unique images
+- Pushed to github.com/Developer915b/baraka-kauppa with git email t1kdv7@gmail.com
