@@ -108,6 +108,42 @@ export function CartSheet() {
       }
       setSuccess({ orderNo: data.orderNo, total: data.total });
       setStep("success");
+
+      // On Netlify, also deliver the order to the shop owner via Netlify Forms
+      // (dashboard + email notifications). Fire-and-forget: the customer's
+      // confirmation must not depend on it.
+      if (process.env.NEXT_PUBLIC_NETLIFY === "true") {
+        try {
+          const payload = new URLSearchParams();
+          payload.append("form-name", "orders");
+          payload.append("orderNo", String(data.orderNo));
+          payload.append("customerName", form.customerName.trim());
+          payload.append("phone", form.phone.trim());
+          payload.append("email", form.email.trim());
+          payload.append("method", method);
+          payload.append("address", method === "delivery" ? form.address.trim() : "");
+          payload.append("city", method === "delivery" ? form.city.trim() : "");
+          payload.append("postalCode", method === "delivery" ? form.postalCode.trim() : "");
+          payload.append("notes", form.notes.trim());
+          payload.append(
+            "items",
+            items
+              .map((i) => `${i.qty} × ${i.nameEn} (${(i.price * i.qty).toFixed(2)} €)`)
+              .join("; ")
+          );
+          payload.append("subtotal", subtotal.toFixed(2));
+          payload.append("deliveryFee", fee.toFixed(2));
+          payload.append("total", Number(data.total).toFixed(2));
+          fetch("/", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: payload.toString(),
+          }).catch(() => {});
+        } catch {
+          // never block the customer on the notification path
+        }
+      }
+
       clear();
     } catch {
       setErrorMsg(t.checkout.error);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
+import { getCatalogProduct, type CatalogProduct } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,58 @@ type OrderItemPayload = {
   qty: number;
   lineTotal: number;
 };
+
+type DbLikeProduct = {
+  id: number;
+  slug: string;
+  nameEn: string;
+  price: number;
+};
+
+type Totals = {
+  orderItems: OrderItemPayload[];
+  subtotal: number;
+  deliveryFee: number;
+  total: number;
+};
+
+function computeTotals(
+  products: (DbLikeProduct | CatalogProduct)[],
+  cleanItems: IncomingItem[],
+  method: string
+): Totals | { error: string } {
+  const productMap = new Map(products.map((p) => [p.id, p]));
+  const orderItems: OrderItemPayload[] = [];
+
+  for (const it of cleanItems) {
+    const p = productMap.get(it.productId);
+    if (!p) {
+      return { error: `Product ${it.productId} is not available` };
+    }
+    orderItems.push({
+      productId: p.id,
+      slug: p.slug,
+      name: p.nameEn,
+      price: p.price,
+      qty: it.qty,
+      lineTotal: Math.round(p.price * it.qty * 100) / 100,
+    });
+  }
+
+  const subtotal =
+    Math.round(orderItems.reduce((sum, it) => sum + it.lineTotal, 0) * 100) / 100;
+  const deliveryFee =
+    method === "delivery" && subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_FEE : 0;
+  const total = Math.round((subtotal + deliveryFee) * 100) / 100;
+
+  return { orderItems, subtotal, deliveryFee, total };
+}
+
+function generateOrderNo(): string {
+  return `BK-${Date.now().toString(36).toUpperCase()}${Math.floor(
+    Math.random() * 90 + 10
+  )}`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,69 +126,88 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
-    // Load products and compute totals server-side (never trust client prices)
-    const ids = cleanItems.map((it) => it.productId);
-    const dbProducts = await db.product.findMany({
-      where: { id: { in: ids }, active: true },
-    });
+    const orderNo = generateOrderNo();
+    const customerData = {
+      customerName: customerName.trim(),
+      phone: phone.trim(),
+      email: email ? email.trim() : null,
+      address: method === "delivery" ? address.trim() : null,
+      city: method === "delivery" ? city.trim() : null,
+      postalCode: method === "delivery" ? postalCode.trim() : null,
+      method,
+      notes: notes ? String(notes).trim().slice(0, 500) : null,
+    };
 
-    const productMap = new Map(dbProducts.map((p) => [p.id, p]));
-    const orderItems: OrderItemPayload[] = [];
+    // --- Path 1: persist to database when available (self-hosted) ---
+    const db = getDb();
+    if (db) {
+      try {
+        const ids = cleanItems.map((it) => it.productId);
+        const dbProducts = await db.product.findMany({
+          where: { id: { in: ids }, active: true },
+        });
 
+        const totals = computeTotals(dbProducts, cleanItems, method);
+        if ("error" in totals) {
+          return NextResponse.json({ error: totals.error }, { status: 400 });
+        }
+
+        await db.order.create({
+          data: {
+            orderNo,
+            ...customerData,
+            subtotal: totals.subtotal,
+            deliveryFee: totals.deliveryFee,
+            total: totals.total,
+            items: JSON.stringify(totals.orderItems),
+          },
+        });
+
+        return NextResponse.json({
+          ok: true,
+          persisted: true,
+          orderNo,
+          subtotal: totals.subtotal,
+          deliveryFee: totals.deliveryFee,
+          total: totals.total,
+          itemCount: totals.orderItems.reduce((n, it) => n + it.qty, 0),
+        });
+      } catch (error) {
+        console.error("DB order write failed, falling back to catalog mode:", error);
+      }
+    }
+
+    // --- Path 2: serverless mode (no database) — validate + price from the
+    // static catalog. The order is confirmed to the customer and delivered to
+    // the shop owner via the Netlify Form submission made by the client. ---
+    const resolved: DbLikeProduct[] = [];
     for (const it of cleanItems) {
-      const p = productMap.get(it.productId);
+      const p = getCatalogProduct(it.productId);
       if (!p) {
         return NextResponse.json(
           { error: `Product ${it.productId} is not available` },
           { status: 400 }
         );
       }
-      orderItems.push({
-        productId: p.id,
-        slug: p.slug,
-        name: p.nameEn,
-        price: p.price,
-        qty: it.qty,
-        lineTotal: Math.round(p.price * it.qty * 100) / 100,
-      });
+      resolved.push({ id: p.id, slug: p.slug, nameEn: p.nameEn, price: p.price });
+    }
+    const catalogTotals = computeTotals(resolved, cleanItems, method);
+    if ("error" in catalogTotals) {
+      return NextResponse.json({ error: catalogTotals.error }, { status: 400 });
     }
 
-    const subtotal =
-      Math.round(orderItems.reduce((sum, it) => sum + it.lineTotal, 0) * 100) / 100;
-    const deliveryFee =
-      method === "delivery" && subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_FEE : 0;
-    const total = Math.round((subtotal + deliveryFee) * 100) / 100;
-
-    // Human-friendly order number
-    const orderNo = `BK-${Date.now().toString(36).toUpperCase()}${Math.floor(
-      Math.random() * 90 + 10
-    )}`;
-
-    const order = await db.order.create({
-      data: {
-        orderNo,
-        customerName: customerName.trim(),
-        phone: phone.trim(),
-        email: email ? email.trim() : null,
-        address: method === "delivery" ? address.trim() : null,
-        city: method === "delivery" ? city.trim() : null,
-        postalCode: method === "delivery" ? postalCode.trim() : null,
-        method,
-        notes: notes ? String(notes).trim().slice(0, 500) : null,
-        subtotal,
-        deliveryFee,
-        total,
-        items: JSON.stringify(orderItems),
-      },
-    });
+    console.log(
+      `[order][catalog] ${orderNo} — ${customerData.customerName} (${customerData.phone}) — ${catalogTotals.total} €`
+    );
 
     return NextResponse.json({
       ok: true,
-      orderNo: order.orderNo,
-      subtotal,
-      deliveryFee,
-      total,
-      itemCount: orderItems.reduce((n, it) => n + it.qty, 0),
+      persisted: false,
+      orderNo,
+      subtotal: catalogTotals.subtotal,
+      deliveryFee: catalogTotals.deliveryFee,
+      total: catalogTotals.total,
+      itemCount: catalogTotals.orderItems.reduce((n, it) => n + it.qty, 0),
     });
   } catch (error) {
     console.error("POST /api/orders failed:", error);

@@ -118,6 +118,59 @@ bun run scripts/seed-products.ts   # idempotent upsert
 
 ---
 
+## Deploying to Netlify
+
+The repo ships with a ready `netlify.toml` and the official
+`@netlify/plugin-nextjs` runtime, so a Git-connected deploy works out of the box.
+
+### How to deploy (Git-connected — required)
+
+1. Push this repo to GitHub (already done: `Developer915b/baraka-kauppa`).
+2. In Netlify: **Add new site → Import an existing project → GitHub** and pick
+   the repo. Do **not** use drag-and-drop — a Next.js app needs a build step.
+3. Netlify reads all settings from `netlify.toml`:
+   - Build command: `npm run build`
+   - Publish directory: `.next`
+   - Node 22, `NEXT_PUBLIC_NETLIFY=true`, official Next.js runtime plugin
+4. Deploy. First build takes a few minutes.
+
+### How the store works on Netlify (no database)
+
+Netlify functions are serverless — the SQLite file cannot be part of the
+deployment. The app handles this automatically:
+
+| Concern | Self-hosted / local | Netlify |
+|---|---|---|
+| Products | Prisma + SQLite (`source: "db"`) | Static catalog `src/lib/catalog.ts` (`source: "catalog"`) |
+| Order pricing | Server-side, from DB | Server-side, from static catalog (same rules) |
+| Order storage | `Order` table in SQLite | **Netlify Forms** submission |
+
+Orders on Netlify are delivered to the shop owner through a hidden
+[Netlify Form](https://docs.netlify.com/forms/setup/) (`orders`) rendered on
+the home page. After checkout, the cart drawer POSTs the order details to it;
+submissions appear in **Netlify dashboard → Forms → orders**.
+
+**To get order emails:** Netlify dashboard → Forms → orders →
+*Settings → Form notifications → Add email notification* → send to
+`hossainsohid@gmail.com`.
+
+To move orders into a real database later, set `DATABASE_URL` in Netlify env
+vars to a hosted database (e.g. Turso/Postgres via a Prisma adapter) — the API
+routes automatically prefer the DB whenever it is reachable.
+
+### Build scripts
+
+| Script | Purpose |
+|---|---|
+| `bun run build` | Plain `next build` — used by Netlify (and any Node host) |
+| `bun run build:standalone` | Self-hosted bundle (`.next/standalone/server.js`) |
+| `bun run start` | Run the self-hosted production server |
+
+`next.config.ts` enables `output: "standalone"` **only** outside Netlify
+(the `NETLIFY=true` build environment variable disables it automatically).
+
+---
+
 ## Notes
 
 - Opening hours shown on the site (Mon–Sat 10–22, Sun 12–18 with a holiday note) are based on the store's public grand-opening information; update `src/lib/i18n.ts` (`visit.hours`) when the store confirms final hours.

@@ -1,0 +1,17 @@
+# Netlify deployment configuration for Baraka Kauppa (Next.js 16)
+# Docs: https://docs.netlify.com/frameworks/next.js/overview/
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Baked into the client bundle at build time; enables Netlify Forms order submission
+  NEXT_PUBLIC_NETLIFY = "true"
+  # Skip Prisma engine download for platforms we don't deploy to (faster installs)
+  PRISMA_SKIP_POSTINSTALL_GENERATE = "false"
+
+# Official Next.js runtime: handles SSR, API routes, image optimisation, ISR, etc.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
