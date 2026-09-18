@@ -23,7 +23,10 @@ A bilingual (English 🇬🇧 / Finnish 🇫🇮) marketing website + online sto
 ## Features
 
 ### Website
-- **Multi-page structure** — `/` (home: hero, features, gallery, CTA), `/shop` (categories + full online store), `/contact` (About + Visit + Contact merged); per-page metadata titles
+- **Multi-page structure** — `/` (home: hero, features, **best sellers, current deals, featured categories**, gallery, CTA), `/shop` (categories + full online store), `/contact` (About + Visit + Contact merged), `/product/[slug]` (18 detail pages); per-page metadata titles
+- **SEO-friendly** — per-page titles/descriptions/canonicals, Open Graph + Twitter cards, `sitemap.xml` (all pages + products), `robots.txt`, JSON-LD structured data (`GroceryStore` on home, `Product` + `BreadcrumbList` on every product page), single-`h1` heading hierarchy, semantic HTML and descriptive alt texts. Set `NEXT_PUBLIC_SITE_URL` to the production domain for correct canonical URLs
+- **Merchandising on the homepage** — "Best Sellers" (customer favourites) and "Current Deals" (discounted products with −% badges, old-price strikethrough and savings tag) sections, plus the featured cuisine categories, all linking into the product detail pages
+- **Product detail pages** — every product card (shop grid, best sellers, deals, related products and even cart items) links to `/product/[slug]`: large photo, price with discount display, stock indicator, quantity stepper, delivery/pickup info, and "You may also like" related products
 - **Dark / light theme** — toggle in the header and in the mobile menu (`next-themes`, class strategy); **light is the default**; preference persisted; every page audited for contrast, hidden text and consistent dark variants
 - **Bilingual UI** — English (default) ↔ Finnish (Suomi) toggle in the header; preference persisted in `localStorage` and kept in sync with `<html lang>`
 - **Fully responsive, mobile-first UI** — verified at 320 px, 390 px, 768 px and 1280 px widths; no horizontal overflow anywhere; stacked price + full-width buttons on product cards; touch-friendly 44 px+ targets
@@ -37,6 +40,7 @@ A bilingual (English 🇬🇧 / Finnish 🇫🇮) marketing website + online sto
 - **Category filtering** — horizontally scrollable filter chips on mobile (hidden scrollbar, snap points)
 - **Shopping cart** — Zustand store persisted in `localStorage`; slide-in drawer with quantity steppers, remove, clear, live subtotal
 - **Checkout** — delivery (€4.90, free over €40) or free in-store pickup; validated form (name, phone, email, address, notes); order totals computed **server-side**
+- **Checkout autofill** — after a successful order the customer's details (name, phone, email, address, method, notes) are saved in `localStorage` and **prefilled automatically on the next checkout**, with a "Saved details loaded" hint and a confirmation on the success screen
 - **Order persistence** — every order is stored in SQLite via Prisma with a unique order number (`BK-XXXXXXXXXX`) and returned to the customer on the success screen
 - **Micro-interactions** — framer-motion animations, toast confirmations, skeleton loaders, badge system (Popular / New / Fresh)
 
@@ -44,7 +48,7 @@ A bilingual (English 🇬🇧 / Finnish 🇫🇮) marketing website + online sto
 
 | Endpoint | Method | Description |
 |---|---|---|
-| `/api/products` | GET | List products. Query params: `category` (asian/chinese/thai/arabic/african/halal/spices), `q` (search) |
+| `/api/products` | GET | List products. Query params: `category` (asian/chinese/thai/arabic/african/halal/spices), `q` (search), `bestseller=true`, `deals=true` |
 | `/api/orders` | POST | Place an order. Body: `customerName, phone, email?, method (delivery\|pickup), address?, city?, postalCode?, notes?, items:[{productId, qty}]`. Totals are recalculated from the DB — client prices are never trusted |
 
 ---
@@ -136,6 +140,11 @@ The repo ships with a ready `netlify.toml` and the official
    - Publish directory: `.next`
    - Node 22, `NEXT_PUBLIC_NETLIFY=true`, official Next.js runtime plugin
 4. Deploy. First build takes a few minutes.
+5. **Recommended:** in *Site configuration → Environment variables* add
+   `NEXT_PUBLIC_SITE_URL` with your site's real address (e.g.
+   `https://your-site.netlify.app` or your custom domain). It is used for the
+   canonical URLs, Open Graph tags, JSON-LD and `sitemap.xml`. The code falls
+   back to `https://baraka-kauppa.netlify.app` when the variable is not set.
 
 ### How the store works on Netlify (no database)
 

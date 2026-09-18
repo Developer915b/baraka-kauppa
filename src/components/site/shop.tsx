@@ -3,28 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Search, ShoppingCart, PackageSearch, RefreshCw, Check } from "lucide-react";
+import { Search, PackageSearch, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/site/language-provider";
-import { useCart } from "@/store/cart";
-import { useToast } from "@/hooks/use-toast";
+import { ProductCard, type CardProduct } from "@/components/site/product-card";
 import { cn } from "@/lib/utils";
 
-type ApiProduct = {
-  id: number;
-  slug: string;
-  nameEn: string;
-  nameFi: string;
-  descEn: string;
-  descFi: string;
-  price: number;
-  unit: string;
-  category: string;
-  image: string;
-  badge: string | null;
-  stock: number;
-};
+type ApiProduct = CardProduct;
 
 const CATEGORY_KEYS = [
   "asian",
@@ -36,17 +22,8 @@ const CATEGORY_KEYS = [
   "spices",
 ] as const;
 
-const BADGE_STYLES: Record<string, string> = {
-  popular: "bg-amber-400 text-emerald-950",
-  new: "bg-emerald-600 text-white",
-  fresh: "bg-lime-600 text-white",
-};
-
 export function Shop() {
-  const { t, locale } = useLanguage();
-  const { toast } = useToast();
-  const addItem = useCart((s) => s.addItem);
-  const openCart = useCart((s) => s.openCart);
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
 
@@ -55,7 +32,6 @@ export function Shop() {
   const [error, setError] = useState(false);
   const [category, setCategory] = useState<string>("all");
   const [query, setQuery] = useState("");
-  const [justAdded, setJustAdded] = useState<number | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync the active tab with ?category= deep links (e.g. from category cards)
@@ -96,29 +72,6 @@ export function Shop() {
     };
   }, [category, query]);
 
-  const handleAdd = (p: ApiProduct) => {
-    addItem({
-      productId: p.id,
-      slug: p.slug,
-      nameEn: p.nameEn,
-      nameFi: p.nameFi,
-      price: p.price,
-      image: p.image,
-      unit: p.unit,
-    });
-    setJustAdded(p.id);
-    setTimeout(() => setJustAdded(null), 1200);
-    toast({
-      title: t.cart.addedToCart,
-      description: locale === "fi" ? p.nameFi : p.nameEn,
-      action: (
-        <Button size="sm" variant="outline" onClick={openCart} className="h-8">
-          {t.cart.title}
-        </Button>
-      ),
-    });
-  };
-
   const isFiltering = useMemo(() => category !== "all" || query.length > 0, [category, query]);
 
   return (
@@ -135,9 +88,9 @@ export function Shop() {
           <p className="text-sm font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400">
             {t.shop.label}
           </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl">
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl">
             {t.shop.title}
-          </h2>
+          </h1>
           <p className="mt-4 text-lg leading-relaxed text-stone-600 dark:text-stone-400">
             {t.shop.subtitle}
           </p>
@@ -230,80 +183,9 @@ export function Shop() {
           </div>
         ) : (
           <div className="mt-12 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-            {products.map((p, i) => {
-              const name = locale === "fi" ? p.nameFi : p.nameEn;
-              const desc = locale === "fi" ? p.descFi : p.descEn;
-              const added = justAdded === p.id;
-              return (
-                <motion.article
-                  key={p.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.4, delay: Math.min(i % 4, 3) * 0.06 }}
-                  className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-stone-200/70 transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-stone-900 dark:ring-stone-800"
-                >
-                  <div className="relative aspect-square overflow-hidden bg-stone-100 dark:bg-stone-800">
-                    <img
-                      src={p.image}
-                      alt={name}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    {p.badge && BADGE_STYLES[p.badge] && (
-                      <span
-                        className={cn(
-                          "absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide shadow",
-                          BADGE_STYLES[p.badge]
-                        )}
-                      >
-                        {t.shop.badges[p.badge as keyof typeof t.shop.badges] ?? p.badge}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-1 flex-col p-4">
-                    <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-stone-900 dark:text-stone-100 sm:text-base">
-                      {name}
-                    </h3>
-                    <p className="mt-1 line-clamp-2 hidden text-xs leading-relaxed text-stone-500 dark:text-stone-400 sm:block">
-                      {desc}
-                    </p>
-                    <p className="mt-1 text-xs text-stone-400 dark:text-stone-500">{p.unit}</p>
-                    {/* Price + add button: stacked on mobile (no clipped text),
-                        row on larger screens */}
-                    <div className="mt-auto flex flex-col gap-2.5 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                      <span className="whitespace-nowrap text-lg font-bold text-emerald-800 dark:text-emerald-300">
-                        {p.price.toFixed(2).replace(".", ",")} €
-                      </span>
-                      <Button
-                        size="sm"
-                        onClick={() => handleAdd(p)}
-                        disabled={p.stock <= 0}
-                        aria-label={`${t.shop.addToCart}: ${name}`}
-                        className={cn(
-                          "h-10 w-full justify-center rounded-full px-3 text-xs font-semibold transition-colors sm:w-auto sm:px-4 sm:text-sm",
-                          added
-                            ? "bg-lime-600 text-white hover:bg-lime-600"
-                            : "bg-emerald-700 text-white hover:bg-emerald-800"
-                        )}
-                      >
-                        {added ? (
-                          <>
-                            <Check className="mr-1 h-4 w-4" aria-hidden="true" />
-                            {t.shop.added}
-                          </>
-                        ) : (
-                          <>
-                            <ShoppingCart className="mr-1 h-4 w-4" aria-hidden="true" />
-                            {t.shop.addToCart}
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </motion.article>
-              );
-            })}
+            {products.map((p, i) => (
+              <ProductCard key={p.id} product={p} index={i} />
+            ))}
           </div>
         )}
 

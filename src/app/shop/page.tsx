@@ -4,9 +4,16 @@ import { Shop } from "@/components/site/shop";
 import { Categories } from "@/components/site/categories";
 
 export const metadata: Metadata = {
-  title: "Shop Online",
+  title: "Shop Online — Halal & International Groceries",
   description:
     "Order halal and international groceries online — basmati rice, curry pastes, dates, halal meat, spices and more. Pay on delivery or pick up in store in Kouvola.",
+  alternates: { canonical: "/shop" },
+  openGraph: {
+    title: "Shop Online | Baraka Kauppa",
+    description:
+      "Order halal and international groceries online — home delivery in Kouvola or free store pickup.",
+    type: "website",
+  },
 };
 
 function ShopFallback() {

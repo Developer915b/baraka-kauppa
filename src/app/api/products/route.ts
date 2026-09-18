@@ -10,6 +10,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
   const q = searchParams.get("q")?.trim();
+  const bestSellerOnly = searchParams.get("bestseller") === "true";
+  const dealsOnly = searchParams.get("deals") === "true";
 
   // 1) Try the database first (self-hosted / local deployments)
   const db = getDb();
@@ -18,6 +20,8 @@ export async function GET(request: NextRequest) {
       const where: {
         active: boolean;
         category?: string;
+        bestSeller?: boolean;
+        oldPrice?: { not: null };
         OR?: Array<{
           nameEn?: { contains: string };
           nameFi?: { contains: string };
@@ -28,6 +32,14 @@ export async function GET(request: NextRequest) {
 
       if (category && VALID_CATEGORIES.includes(category)) {
         where.category = category;
+      }
+
+      if (bestSellerOnly) {
+        where.bestSeller = true;
+      }
+
+      if (dealsOnly) {
+        where.oldPrice = { not: null };
       }
 
       if (q) {
@@ -51,10 +63,12 @@ export async function GET(request: NextRequest) {
           descEn: true,
           descFi: true,
           price: true,
+          oldPrice: true,
           unit: true,
           category: true,
           image: true,
           badge: true,
+          bestSeller: true,
           stock: true,
         },
       });
@@ -67,10 +81,17 @@ export async function GET(request: NextRequest) {
   }
 
   // 2) Static catalog fallback (serverless deployments without a database)
-  const products = filterCatalog({
+  let products = filterCatalog({
     category: category && VALID_CATEGORIES.includes(category) ? category : null,
     q,
   });
+
+  if (bestSellerOnly) {
+    products = products.filter((p) => p.bestSeller);
+  }
+  if (dealsOnly) {
+    products = products.filter((p) => p.oldPrice != null);
+  }
 
   return NextResponse.json({ products, source: "catalog" });
 }

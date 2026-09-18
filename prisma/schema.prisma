@@ -15,10 +15,12 @@ model Product {
   descEn    String
   descFi    String
   price     Float
+  oldPrice  Float?
   unit      String
   category  String
   image     String
   badge     String?
+  bestSeller Boolean @default(false)
   stock     Int      @default(50)
   active    Boolean  @default(true)
   createdAt DateTime @default(now())

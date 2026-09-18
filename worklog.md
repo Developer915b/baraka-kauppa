@@ -110,3 +110,26 @@ Stage Summary:
 - Netlify Forms v5 incompatibility resolved via static form file
 - All 18 products have unique images
 - Pushed to github.com/Developer915b/baraka-kauppa with git email t1kdv7@gmail.com
+
+---
+Task ID: 6
+Agent: Main agent (Super Z)
+Task: Homepage merchandising (best sellers + deals + featured categories), SEO-friendly homepage, product detail pages for every product, checkout autofill, full testing + bug fixes, push to GitHub.
+
+Work Log:
+- Data model: added oldPrice (Float?) + bestSeller (Boolean) to Prisma Product; db:push + prisma generate + reseed (18 products). 6 best sellers (rice, ramen, coconut milk, red curry, dates, whole chicken) and 6 deals with oldPrice (tea 4.9->3.9, olive oil 12.9->9.9, plantains 3.5->2.9, cassava 4.2->3.6, wings 7.9->6.9, bariis 3.9->3.4)
+- catalog.ts: new fields + getCatalogProductBySlug() + discountPercent(); seed-products.ts synced; /api/products: oldPrice/bestSeller in select + ?bestseller=true / ?deals=true filters in both DB and catalog paths
+- Shared ProductCard component (src/components/site/product-card.tsx): image+title link to /product/[slug], badge + red -% discount badge, old-price strikethrough, add-to-cart outside link (valid nesting), per-card added state + toast; shop.tsx refactored to use it (removed duplicated card code)
+- Product detail pages /product/[slug] (server page + client ProductDetail): DB-first lookup with catalog fallback, generateMetadata (title with price, desc, canonical, OG, Twitter), JSON-LD Product + BreadcrumbList, breadcrumbs, category chip deep-linking /shop?category=, qty stepper (1..min(stock,99)), add-to-cart with live line total, delivery/pickup/quality info cards, related products (same category first, 4 items), branded global not-found.tsx
+- Homepage: new BestSellers + Deals client sections with server-rendered initial data from catalog (SEO + instant paint) that re-sync with the API after hydration; featured Categories moved onto homepage with white bg override; order: Hero, Features, BestSellers, Deals, Categories, Gallery, HomeCta
+- SEO: src/lib/site.ts (SITE_URL via NEXT_PUBLIC_SITE_URL, fallback https://baraka-kauppa.netlify.app); layout metadataBase + expanded keywords/robots/OG/Twitter; home metadata (absolute title, canonical, GroceryStore JSON-LD with address/hours/phone/sameAs); canonicals on /shop and /contact; sitemap.ts (21 URLs) + robots.ts (removed conflicting public/robots.txt); shop page h2->h1 (one h1 per page)
+- Checkout autofill: baraka-checkout-details localStorage key; details+method saved on successful order; prefill (only empty fields) when entering checkout; green "Saved details loaded" hint; "We saved your details" note on success screen; i18n keys added (home.bestSellers, home.deals, product.*, checkout.savedDetailsHint/detailsSavedNote in EN+FI); cart item image/name now link to product pages (drawer closes on click)
+- Fixed during testing: duplicate home/product i18n blocks (failed MultiEdit partially applied); TS null-narrowing errors in product-card/product-detail; dev server stale Prisma client after schema change (restart); robots.txt 500 (conflicting public file)
+- Tests: lint clean, tsc clean (src), NETLIFY=true build OK (/ /shop /contact static, /product/[slug] dynamic, robots+sitemap static); serverless sim (no DATABASE_URL): home/product 200, catalog fallback bestsellers=6, order persisted:false with correct pricing; browser E2E desktop 1280 + mobile 390 + 320: home sections counts (4 bestsellers, 6 deals w/ badges, 6 categories), no overflow on any page, product click-through from shop search/best sellers/deals/related/cart, qty stepper + add-to-cart, two desktop orders + one mobile order placed, autofill prefilled all fields on 2nd/3rd checkout incl. FI/dark spot checks, zero console/page/server errors; 3 test orders cleaned (orders=0)
+
+Stage Summary:
+- Homepage now merchandised: Best Sellers, Current Deals (with real discount pricing), featured categories
+- All 18 products have SEO-ready detail pages at /product/[slug] linked from every product surface
+- Checkout details autofill working end-to-end (save -> prefill -> hint)
+- SEO: structured data, sitemap, robots, canonicals, OG/Twitter, per-page metadata
+- Pushed to github.com/Developer915b/baraka-kauppa (main)

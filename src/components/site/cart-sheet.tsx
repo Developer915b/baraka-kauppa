@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Sheet,
   SheetContent,
@@ -27,6 +28,7 @@ import {
   Store,
   CheckCircle2,
   PartyPopper,
+  UserRoundCheck,
 } from "lucide-react";
 import { useCart, cartCount, cartSubtotal } from "@/store/cart";
 import { useLanguage } from "@/components/site/language-provider";
@@ -35,7 +37,30 @@ import { cn } from "@/lib/utils";
 const DELIVERY_FEE = 4.9;
 const FREE_THRESHOLD = 40;
 
+/** localStorage key for the customer's last order details (checkout autofill). */
+const SAVED_DETAILS_KEY = "baraka-checkout-details";
+
 type Step = "cart" | "checkout" | "success";
+
+type CheckoutForm = {
+  customerName: string;
+  phone: string;
+  email: string;
+  address: string;
+  postalCode: string;
+  city: string;
+  notes: string;
+};
+
+const EMPTY_FORM: CheckoutForm = {
+  customerName: "",
+  phone: "",
+  email: "",
+  address: "",
+  postalCode: "",
+  city: "Kouvola",
+  notes: "",
+};
 
 export function CartSheet() {
   const { t, locale } = useLanguage();
@@ -43,15 +68,8 @@ export function CartSheet() {
 
   const [step, setStep] = useState<Step>("cart");
   const [method, setMethod] = useState<"delivery" | "pickup">("delivery");
-  const [form, setForm] = useState({
-    customerName: "",
-    phone: "",
-    email: "",
-    address: "",
-    postalCode: "",
-    city: "Kouvola",
-    notes: "",
-  });
+  const [form, setForm] = useState<CheckoutForm>(EMPTY_FORM);
+  const [savedLoaded, setSavedLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ orderNo: string; total: number } | null>(null);
@@ -65,18 +83,54 @@ export function CartSheet() {
   const set = (key: keyof typeof form) => (value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
 
+  /** Prefill from the customer's last order — only fills empty fields. */
+  const loadSavedDetails = (): boolean => {
+    try {
+      const raw = localStorage.getItem(SAVED_DETAILS_KEY);
+      if (!raw) return false;
+      const saved = JSON.parse(raw) as Partial<CheckoutForm> & { method?: string };
+      setForm((f) => ({
+        customerName: f.customerName || saved.customerName || "",
+        phone: f.phone || saved.phone || "",
+        email: f.email || saved.email || "",
+        address: f.address || saved.address || "",
+        postalCode: f.postalCode || saved.postalCode || "",
+        city: saved.city || f.city,
+        notes: f.notes || saved.notes || "",
+      }));
+      if (saved.method === "delivery" || saved.method === "pickup") {
+        setMethod(saved.method);
+      }
+      return Boolean(
+        saved.customerName || saved.phone || saved.address || saved.email
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  /** Remember this order's details for next time (never blocks checkout). */
+  const persistDetails = () => {
+    try {
+      localStorage.setItem(
+        SAVED_DETAILS_KEY,
+        JSON.stringify({ ...form, method })
+      );
+    } catch {
+      // storage unavailable (private mode etc.) — autofill is best-effort
+    }
+  };
+
+  const goToCheckout = () => {
+    setSavedLoaded(loadSavedDetails());
+    setStep("checkout");
+  };
+
   const resetAll = () => {
     setStep("cart");
-    setForm({
-      customerName: "",
-      phone: "",
-      email: "",
-      address: "",
-      postalCode: "",
-      city: "Kouvola",
-      notes: "",
-    });
+    setForm(EMPTY_FORM);
     setMethod("delivery");
+    setSavedLoaded(false);
     setErrorMsg(null);
     setSuccess(null);
   };
@@ -108,6 +162,9 @@ export function CartSheet() {
       }
       setSuccess({ orderNo: data.orderNo, total: data.total });
       setStep("success");
+
+      // Save the customer's details so the next checkout is prefilled.
+      persistDetails();
 
       // On Netlify, also deliver the order to the shop owner via Netlify Forms
       // (dashboard + email notifications). Fire-and-forget: the customer's
@@ -203,15 +260,26 @@ export function CartSheet() {
                 <ul className="divide-y divide-stone-100 py-2 dark:divide-stone-800">
                   {items.map((item) => (
                     <li key={item.productId} className="flex gap-3 py-4">
-                      <img
-                        src={item.image}
-                        alt=""
-                        className="h-16 w-16 shrink-0 rounded-xl object-cover"
-                      />
+                      <Link
+                        href={`/product/${item.slug}`}
+                        onClick={closeCart}
+                        className="shrink-0"
+                        aria-label={locale === "fi" ? item.nameFi : item.nameEn}
+                      >
+                        <img
+                          src={item.image}
+                          alt=""
+                          className="h-16 w-16 rounded-xl object-cover transition-opacity hover:opacity-80"
+                        />
+                      </Link>
                       <div className="flex min-w-0 flex-1 flex-col">
-                        <p className="truncate text-sm font-semibold text-stone-900 dark:text-stone-100">
+                        <Link
+                          href={`/product/${item.slug}`}
+                          onClick={closeCart}
+                          className="truncate text-sm font-semibold text-stone-900 transition-colors hover:text-emerald-700 dark:text-stone-100 dark:hover:text-emerald-300"
+                        >
                           {locale === "fi" ? item.nameFi : item.nameEn}
-                        </p>
+                        </Link>
                         <p className="text-xs text-stone-400 dark:text-stone-500">{item.unit}</p>
                         <div className="mt-2 flex items-center justify-between">
                           <div className="flex items-center gap-1">
@@ -284,7 +352,7 @@ export function CartSheet() {
                 </div>
                 <Button
                   className="h-12 w-full rounded-full bg-amber-400 text-base font-semibold text-emerald-950 hover:bg-amber-300"
-                  onClick={() => setStep("checkout")}
+                  onClick={goToCheckout}
                 >
                   {t.cart.checkout}
                   <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
@@ -298,6 +366,13 @@ export function CartSheet() {
           <>
             <ScrollArea className="min-h-0 flex-1 px-5 py-4">
               <p className="text-sm text-stone-600 dark:text-stone-400">{t.checkout.subtitle}</p>
+
+              {savedLoaded && (
+                <p className="mt-3 flex items-center gap-2 rounded-xl bg-lime-50 px-3 py-2 text-xs font-medium text-lime-800 ring-1 ring-lime-200 dark:bg-lime-900/20 dark:text-lime-300 dark:ring-lime-900">
+                  <UserRoundCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {t.checkout.savedDetailsHint}
+                </p>
+              )}
 
               {/* Contact */}
               <fieldset className="mt-5 space-y-3">
@@ -573,6 +648,10 @@ export function CartSheet() {
                 <span className="text-lg font-bold text-stone-900 dark:text-stone-50">{fmt(success.total)}</span>
               </div>
             </div>
+            <p className="-mt-1 flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400">
+              <UserRoundCheck className="h-3.5 w-3.5 shrink-0 text-lime-600 dark:text-lime-400" aria-hidden="true" />
+              {t.checkout.detailsSavedNote}
+            </p>
             <Button
               className="mt-2 h-12 w-full rounded-full bg-emerald-700 text-base font-semibold text-white hover:bg-emerald-800"
               onClick={() => {

@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/components/site/language-provider";
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { CartSheet } from "@/components/site/cart-sheet";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,34 +20,77 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Baraka Kauppa | International & Halal Grocery Store in Kouvola",
-    template: "%s | Baraka Kauppa",
+    default: `${SITE_NAME} | International & Halal Grocery Store in Kouvola`,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "Baraka Kauppa is Kouvola's new international mini market — Asian, Chinese, Thai, Arabic and African groceries plus certified halal foods. Open 7 days a week.",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
   keywords: [
     "Baraka Kauppa",
     "Kouvola",
     "halal",
+    "halal Kouvola",
     "international grocery",
-    "Asian food",
+    "Asian food Kouvola",
     "African food",
     "Middle Eastern food",
+    "ruokakauppa Kouvola",
     "elintarvikeliike",
+    "verkkokauppa",
+    "halal liha",
   ],
   authors: [{ name: "Baraka Kauppa Oy" }],
+  creator: "Baraka Kauppa Oy",
+  publisher: "Baraka Kauppa Oy",
+  formatDetection: {
+    telephone: true,
+    email: true,
+  },
+  alternates: {
+    canonical: "/",
+    languages: {
+      en: "/",
+      fi: "/",
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: "/favicon.svg",
   },
   openGraph: {
-    title: "Baraka Kauppa | International & Halal Grocery Store",
-    description:
-      "Taste the world in Kouvola — Asian, Chinese, Thai, Arabic and African groceries with certified halal selection.",
+    title: `${SITE_NAME} | International & Halal Grocery Store`,
+    description: SITE_DESCRIPTION,
     type: "website",
+    siteName: SITE_NAME,
     locale: "en_US",
     alternateLocale: "fi_FI",
+    images: [
+      {
+        url: "/images/hero.png",
+        width: 1344,
+        height: 768,
+        alt: "Inside Baraka Kauppa — shelves full of world flavours",
+      },
+    ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} | International & Halal Grocery Store`,
+    description: SITE_DESCRIPTION,
+    images: ["/images/hero.png"],
+  },
+  category: "grocery",
 };
 
 export const viewport: Viewport = {

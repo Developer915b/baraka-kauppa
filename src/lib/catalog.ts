@@ -11,10 +11,13 @@ export type CatalogProduct = {
   descEn: string;
   descFi: string;
   price: number;
+  /** Original price before the current discount (null = not discounted). */
+  oldPrice: number | null;
   unit: string;
   category: string;
   image: string;
   badge: string | null;
+  bestSeller: boolean;
   stock: number;
 };
 
@@ -30,10 +33,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Pitkäjyväinen, tuoksuva basmatiriisi — täydellinen biryaniin, pilaffiin ja jokapäiväisiin riisiruokiin.",
     price: 6.9,
+    oldPrice: null,
     unit: "5 kg bag",
     category: "asian",
     image: "/images/prod-rice.png",
     badge: "popular",
+    bestSeller: true,
     stock: 50,
   },
   {
@@ -46,10 +51,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Klassiset aasialaiset pikanuudelit — valmis lounas 3 minuutissa. Kaupassa useita makuja.",
     price: 2.5,
+    oldPrice: null,
     unit: "5 × 85 g",
     category: "asian",
     image: "/images/prod-ramen.png",
     badge: null,
+    bestSeller: true,
     stock: 50,
   },
   {
@@ -62,10 +69,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Vahva ja kermainen kookosmaito curryihin, keittoihin ja jälkiruokiin. Ilman lisäaineita.",
     price: 1.8,
+    oldPrice: null,
     unit: "400 ml can",
     category: "asian",
     image: "/images/prod-coconut.png",
     badge: null,
+    bestSeller: true,
     stock: 50,
   },
   {
@@ -78,10 +87,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Tuoksuva vihreä tee, maustettu tuoreilla jasmiinikukilla — rauhoittava klassikko.",
     price: 3.9,
+    oldPrice: 4.9,
     unit: "100 g box",
     category: "asian",
     image: "/images/prod-tea.png",
     badge: null,
+    bestSeller: false,
     stock: 50,
   },
   // Thai
@@ -95,10 +106,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Aito tulinen punainen currytahna sitrusgrattiisilla ja galangalilla. Riittää 4–5 annokseen.",
     price: 2.9,
+    oldPrice: null,
     unit: "400 g tub",
     category: "thai",
     image: "/images/prod-curry.png",
     badge: "popular",
+    bestSeller: true,
     stock: 50,
   },
   {
@@ -111,10 +124,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Tuore ja tulinen vihreä currytahna — Thaimaan rakastetuimman curryn sydän.",
     price: 2.9,
+    oldPrice: null,
     unit: "400 g tub",
     category: "thai",
     image: "/images/prod-green-curry.png",
     badge: null,
+    bestSeller: false,
     stock: 50,
   },
   // Arabic & Middle East
@@ -128,10 +143,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Suuret, pehmeät ja karamellimakeat medjool-taatelit — ihanteelliset vieraille, ramadaaniin ja välipalaksi.",
     price: 7.5,
+    oldPrice: null,
     unit: "500 g box",
     category: "arabic",
     image: "/images/prod-dates.png",
     badge: "popular",
+    bestSeller: true,
     stock: 50,
   },
   {
@@ -144,10 +161,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Kylmäpuristettu neitsytoliiviöljy, jonka tuoksu on hedelmäinen — ruoanlaittoon, dipattavaksi ja kastikkeisiin.",
     price: 9.9,
+    oldPrice: 12.9,
     unit: "1 L bottle",
     category: "arabic",
     image: "/images/prod-oliveoil.png",
     badge: null,
+    bestSeller: false,
     stock: 50,
   },
   {
@@ -160,10 +179,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Kivijauhettu sesamitahna hummukseen, baba ganoushiin ja halvaan. 100 % sesamia, ei muuta.",
     price: 3.5,
+    oldPrice: null,
     unit: "400 g jar",
     category: "arabic",
     image: "/images/prod-tahini.png",
     badge: null,
+    bestSeller: false,
     stock: 50,
   },
   // African
@@ -177,10 +198,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Tärkkelyspitoiset keittobanaanit keleweleen, mofongoon, matokeen ja länsiafrikkalaisiin pataruokiin.",
     price: 2.9,
+    oldPrice: 3.5,
     unit: "per kg",
     category: "african",
     image: "/images/prod-plantain.png",
     badge: "fresh",
+    bestSeller: false,
     stock: 50,
   },
   {
@@ -193,10 +216,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Hienoksi jauhettu maissijauho ugaliin, nsimaan, sadzaan ja puuroon.",
     price: 3.2,
+    oldPrice: null,
     unit: "2 kg bag",
     category: "african",
     image: "/images/prod-flour.png",
     badge: null,
+    bestSeller: false,
     stock: 50,
   },
   {
@@ -209,10 +234,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Gluteeniton maniokkijauho — perusraaka-aine fufuun, ohukaisiin ja pataruokien suurustamiseen.",
     price: 3.6,
+    oldPrice: 4.2,
     unit: "2 kg bag",
     category: "african",
     image: "/images/prod-cassava.png",
     badge: null,
+    bestSeller: false,
     stock: 50,
   },
   // Halal meat
@@ -226,10 +253,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Tuore sertifioitu kokonainen halal-kana, puhdistettu ja valmis keitettäväksi. Hoidettu huolella.",
     price: 8.5,
+    oldPrice: null,
     unit: "≈1.4 kg",
     category: "halal",
     image: "/images/prod-chicken.png",
     badge: "popular",
+    bestSeller: true,
     stock: 50,
   },
   {
@@ -242,10 +271,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Tuoreet halal-kanansiivet — täydelliset grillaamiseen, paistamiseen ja marinointiin.",
     price: 6.9,
+    oldPrice: 7.9,
     unit: "per kg",
     category: "halal",
     image: "/images/prod-wings.png",
     badge: null,
+    bestSeller: false,
     stock: 50,
   },
   // Spices & pantry
@@ -259,10 +290,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Kirkkaan kultainen kurkumajauhe — maanläheistä lämpöä curryihin, riisiin ja kultamaitoon.",
     price: 1.9,
+    oldPrice: null,
     unit: "200 g",
     category: "spices",
     image: "/images/prod-turmeric.png",
     badge: null,
+    bestSeller: false,
     stock: 50,
   },
   {
@@ -275,10 +308,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Kokonaiset kuminsiemenet, paahdettuna pähkinäisen makuisia — välttämättömät Etelä-Aasian ja Lähi-idän keittiöissä.",
     price: 2.2,
+    oldPrice: null,
     unit: "200 g",
     category: "spices",
     image: "/images/prod-cumin.png",
     badge: null,
+    bestSeller: false,
     stock: 50,
   },
   {
@@ -291,10 +326,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Sitruksisen makea jauhettu korianteri — lukemattomien mausteseosten selkäranka.",
     price: 2.0,
+    oldPrice: null,
     unit: "200 g",
     category: "spices",
     image: "/images/prod-coriander.png",
     badge: null,
+    bestSeller: false,
     stock: 50,
   },
   {
@@ -307,10 +344,12 @@ export const CATALOG: CatalogProduct[] = [
     descFi:
       "Tuoksuva riisi- ja mausteseos aitoon somalialaiseen bariis iskukariin — lisää vain liha tai kasvikset.",
     price: 3.4,
+    oldPrice: 3.9,
     unit: "500 g",
     category: "spices",
     image: "/images/prod-bariis.png",
     badge: "new",
+    bestSeller: false,
     stock: 50,
   },
 ];
@@ -339,4 +378,14 @@ export function filterCatalog(opts: { category?: string | null; q?: string | nul
 
 export function getCatalogProduct(id: number): CatalogProduct | undefined {
   return CATALOG.find((p) => p.id === id);
+}
+
+export function getCatalogProductBySlug(slug: string): CatalogProduct | undefined {
+  return CATALOG.find((p) => p.slug === slug);
+}
+
+/** Percentage saved when a product has an oldPrice, rounded to whole numbers. */
+export function discountPercent(oldPrice: number, price: number): number {
+  if (oldPrice <= price) return 0;
+  return Math.round(((oldPrice - price) / oldPrice) * 100);
 }

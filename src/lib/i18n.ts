@@ -193,7 +193,39 @@ export const translations = {
       orderNo: "Order number",
       successTotal: "Total to pay",
       newOrder: "Place another order",
+      savedDetailsHint: "Saved details loaded — update them if needed.",
+      detailsSavedNote: "We saved your details so your next order is even faster.",
       error: "Something went wrong. Please check your details and try again.",
+    },
+    home: {
+      bestSellers: {
+        label: "Best Sellers",
+        title: "Customer Favourites",
+        subtitle:
+          "The products our customers come back for, week after week — the true tastes of home.",
+        viewAll: "View all products",
+      },
+      deals: {
+        label: "Special Offers",
+        title: "Current Deals",
+        subtitle: "Real discounts on popular items — while stock lasts.",
+        viewAll: "See all offers in the shop",
+      },
+    },
+    product: {
+      breadcrumbHome: "Home",
+      breadcrumbShop: "Shop",
+      saveTag: "Save",
+      inStock: "In stock",
+      description: "Description",
+      deliveryText:
+        "€4.90 home delivery in the Kouvola area — free on orders over €40. Pay on delivery.",
+      pickupText:
+        "Free pickup from the store at Kouvolankatu 34 A31 — ready when you arrive.",
+      qualityText:
+        "Carefully sourced, quality-checked groceries. Certified halal selection and fresh stock weekly.",
+      related: "You may also like",
+      viewAll: "View all products",
     },
     homeCta: {
       title: "World groceries, delivered to your door",
@@ -442,7 +474,38 @@ export const translations = {
       orderNo: "Tilausnumero",
       successTotal: "Maksettava yhteensä",
       newOrder: "Tee uusi tilaus",
+      savedDetailsHint: "Tallennetut tiedot ladattu — voit muokata niitä tarvittaessa.",
+      detailsSavedNote: "Tallensimme tietosi, jotta seuraava tilauksesi on vielä nopeampi.",
       error: "Jokin meni pieleen. Tarkista tiedot ja yritä uudelleen.",
+    },
+    home: {
+      bestSellers: {
+        label: "Myydyimmät",
+        title: "Asiakkaiden suosikit",
+        subtitle:
+          "Tuotteet, joihin asiakkaamme palaavat viikko toisensa jälkeen — kodin aitoja makuja.",
+        viewAll: "Katso kaikki tuotteet",
+      },
+      deals: {
+        label: "Erikoistarjoukset",
+        title: "Ajankohtaiset tarjoukset",
+        subtitle: "Aitoja alennuksia suosituista tuotteista — kunnes varastot loppuvat.",
+        viewAll: "Katso kaikki tarjoukset",
+      },
+    },
+    product: {
+      breadcrumbHome: "Etusivu",
+      breadcrumbShop: "Kauppa",
+      saveTag: "Säästät",
+      inStock: "Varastossa",
+      description: "Kuvaus",
+      deliveryText:
+        "Kotiinkuljetus 4,90 € Kouvolan alueella — ilmainen yli 40 € tilauksissa. Maksu toimituksen yhteydessä.",
+      pickupText: "Ilmainen nouto kaupasta Kouvolankatu 34 A31 — valmiina kun saavut.",
+      qualityText:
+        "Huolella valittuja ja laadukkaita elintarvikkeita. Sertifioitu halal-valikoima ja tuoretta tavaraa viikoittain.",
+      related: "Saatat pitää myös näistä",
+      viewAll: "Katso kaikki tuotteet",
     },
     homeCta: {
       title: "Maailman maut kotiin tai noudettavaksi",

@@ -9,10 +9,12 @@ type SeedProduct = {
   descEn: string;
   descFi: string;
   price: number;
+  oldPrice?: number;
   unit: string;
   category: string;
   image: string;
   badge?: string;
+  bestSeller?: boolean;
 };
 
 const PRODUCTS: SeedProduct[] = [
@@ -30,6 +32,7 @@ const PRODUCTS: SeedProduct[] = [
     category: "asian",
     image: "/images/prod-rice.png",
     badge: "popular",
+    bestSeller: true,
   },
   {
     slug: "instant-ramen-5pack",
@@ -43,6 +46,7 @@ const PRODUCTS: SeedProduct[] = [
     unit: "5 × 85 g",
     category: "asian",
     image: "/images/prod-ramen.png",
+    bestSeller: true,
   },
   {
     slug: "coconut-milk-400ml",
@@ -56,6 +60,7 @@ const PRODUCTS: SeedProduct[] = [
     unit: "400 ml can",
     category: "asian",
     image: "/images/prod-coconut.png",
+    bestSeller: true,
   },
   {
     slug: "jasmine-green-tea-100g",
@@ -66,6 +71,7 @@ const PRODUCTS: SeedProduct[] = [
     descFi:
       "Tuoksuva vihreä tee, maustettu tuoreilla jasmiinikukilla — rauhoittava klassikko.",
     price: 3.9,
+    oldPrice: 4.9,
     unit: "100 g box",
     category: "asian",
     image: "/images/prod-tea.png",
@@ -84,6 +90,7 @@ const PRODUCTS: SeedProduct[] = [
     category: "thai",
     image: "/images/prod-curry.png",
     badge: "popular",
+    bestSeller: true,
   },
   {
     slug: "green-curry-paste-400g",
@@ -112,6 +119,7 @@ const PRODUCTS: SeedProduct[] = [
     category: "arabic",
     image: "/images/prod-dates.png",
     badge: "popular",
+    bestSeller: true,
   },
   {
     slug: "olive-oil-1l",
@@ -122,6 +130,7 @@ const PRODUCTS: SeedProduct[] = [
     descFi:
       "Kylmäpuristettu neitsytoliiviöljy, jonka tuoksu on hedelmäinen — ruoanlaittoon, dipattavaksi ja kastikkeisiin.",
     price: 9.9,
+    oldPrice: 12.9,
     unit: "1 L bottle",
     category: "arabic",
     image: "/images/prod-oliveoil.png",
@@ -149,6 +158,7 @@ const PRODUCTS: SeedProduct[] = [
     descFi:
       "Tärkkelyspitoiset keittobanaanit keleweleen, mofongoon, matokeen ja länsiafrikkalaisiin pataruokiin.",
     price: 2.9,
+    oldPrice: 3.5,
     unit: "per kg",
     category: "african",
     image: "/images/prod-plantain.png",
@@ -176,6 +186,7 @@ const PRODUCTS: SeedProduct[] = [
     descFi:
       "Gluteeniton maniokkijauho — perusraaka-aine fufuun, ohukaisiin ja pataruokien suurustamiseen.",
     price: 3.6,
+    oldPrice: 4.2,
     unit: "2 kg bag",
     category: "african",
     image: "/images/prod-cassava.png",
@@ -194,6 +205,7 @@ const PRODUCTS: SeedProduct[] = [
     category: "halal",
     image: "/images/prod-chicken.png",
     badge: "popular",
+    bestSeller: true,
   },
   {
     slug: "halal-chicken-wings-1kg",
@@ -204,6 +216,7 @@ const PRODUCTS: SeedProduct[] = [
     descFi:
       "Tuoreet halal-kanansiivet — täydelliset grillaamiseen, paistamiseen ja marinointiin.",
     price: 6.9,
+    oldPrice: 7.9,
     unit: "per kg",
     category: "halal",
     image: "/images/prod-wings.png",
@@ -257,6 +270,7 @@ const PRODUCTS: SeedProduct[] = [
     descFi:
       "Tuoksuva riisi- ja mausteseos aitoon somalialaiseen bariis iskukariin — lisää vain liha tai kasvikset.",
     price: 3.4,
+    oldPrice: 3.9,
     unit: "500 g",
     category: "spices",
     image: "/images/prod-bariis.png",
@@ -275,12 +289,19 @@ async function main() {
         descEn: p.descEn,
         descFi: p.descFi,
         price: p.price,
+        oldPrice: p.oldPrice ?? null,
         unit: p.unit,
         category: p.category,
         image: p.image,
         badge: p.badge ?? null,
+        bestSeller: p.bestSeller ?? false,
       },
-      create: { ...p, badge: p.badge ?? null },
+      create: {
+        ...p,
+        oldPrice: p.oldPrice ?? null,
+        badge: p.badge ?? null,
+        bestSeller: p.bestSeller ?? false,
+      },
     });
   }
   const count = await prisma.product.count();

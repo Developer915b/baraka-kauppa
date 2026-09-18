@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/components/site/language-provider";
+import { cn } from "@/lib/utils";
 
 const CATEGORY_IMAGES = [
   { src: "/images/cat-asian.png", alt: "Asian pantry products — rice, noodles and sauces", key: "asian" },
@@ -14,11 +15,19 @@ const CATEGORY_IMAGES = [
   { src: "/images/cat-halal.png", alt: "Fresh certified halal meat counter", key: "halal" },
 ] as const;
 
-export function Categories() {
+type CategoriesProps = {
+  /** Optional background override, e.g. on the homepage between other sections. */
+  className?: string;
+};
+
+export function Categories({ className }: CategoriesProps) {
   const { t } = useLanguage();
 
   return (
-    <section id="products" className="scroll-mt-20 bg-stone-50 py-20 dark:bg-stone-900/40 sm:py-24">
+    <section
+      id="products"
+      className={cn("scroll-mt-20 py-20 sm:py-24", className ?? "bg-stone-50 dark:bg-stone-900/40")}
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Heading */}
         <motion.div
