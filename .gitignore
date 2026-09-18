@@ -52,3 +52,20 @@ prompt
 server.log
 # Skills directory
 /skills/
+# local test screenshots
+scripts/test-*.png
+scripts/verify-*.png
+scripts/fb_*.json
+scripts/fb_*.html
+scripts/search*.json
+scripts/news.json
+scripts/biz16100.json
+scripts/finder.json
+scripts/gen_products.log
+scripts/*.json.bak
+agent-ctx
+tool-results
+download
+
+# sqlite database
+db/*.db

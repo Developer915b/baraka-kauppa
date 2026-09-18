@@ -12,23 +12,23 @@ export function Contact() {
 
   const channels = [
     {
-      icon: Facebook,
-      label: t.contact.facebook,
-      value: "Baraka Kauppa | Kouvola",
-      href: FB_URL,
-      external: true,
+      icon: Phone,
+      label: t.contact.phoneLabel,
+      value: "+358 45 8652799",
+      href: "tel:+358458652799",
+      external: false,
     },
     {
       icon: Mail,
       label: t.contact.emailLabel,
-      value: "barakakauppa.kouvola@gmail.com",
-      href: "mailto:barakakauppa.kouvola@gmail.com",
+      value: "hossainsohid@gmail.com",
+      href: "mailto:hossainsohid@gmail.com",
       external: false,
     },
     {
-      icon: Phone,
-      label: t.contact.phoneLabel,
-      value: "Contact via Facebook Messenger",
+      icon: Facebook,
+      label: t.contact.facebook,
+      value: "Baraka Kauppa | Kouvola",
       href: FB_URL,
       external: true,
     },
@@ -107,6 +107,9 @@ export function Contact() {
                     {t.contact.storeLabel}
                   </span>
                   <span className="block text-sm font-semibold text-white">
+                    Kouvolankatu 34 A31, 45100 Kouvola
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-relaxed text-emerald-200">
                     {t.contact.storeText}
                   </span>
                 </span>

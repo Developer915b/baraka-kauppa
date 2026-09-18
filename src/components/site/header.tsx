@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, ShoppingBasket, Globe, X, Facebook } from "lucide-react";
+import { Menu, ShoppingBasket, Globe, X, Facebook, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/site/language-provider";
+import { useCart, cartCount } from "@/store/cart";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { key: "about", href: "#about" },
   { key: "products", href: "#products" },
+  { key: "shop", href: "#shop" },
   { key: "gallery", href: "#gallery" },
   { key: "visit", href: "#visit" },
   { key: "contact", href: "#contact" },
@@ -17,6 +19,8 @@ const NAV_ITEMS = [
 
 export function Header() {
   const { t, locale, toggleLocale } = useLanguage();
+  const { items, openCart } = useCart();
+  const count = cartCount(items);
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -93,6 +97,30 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {/* Cart button */}
+          <Button
+            size="sm"
+            onClick={openCart}
+            aria-label={`${t.cart.title} (${count})`}
+            className={cn(
+              "relative h-10 gap-1.5 rounded-full px-3 text-sm font-semibold",
+              scrolled
+                ? "bg-emerald-700 text-white hover:bg-emerald-800"
+                : "bg-amber-400 text-emerald-950 hover:bg-amber-300"
+            )}
+          >
+            <ShoppingCart className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">{t.cart.title}</span>
+            {count > 0 && (
+              <span
+                aria-hidden="true"
+                className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white ring-2 ring-white"
+              >
+                {count}
+              </span>
+            )}
+          </Button>
+
           {/* Facebook link */}
           <a
             href="https://www.facebook.com/people/Baraka-Kauppa/61592352316861/"

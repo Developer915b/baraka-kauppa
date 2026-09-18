@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/site/language-provider";
 
 const MAPS_URL =
-  "https://www.google.com/maps/search/?api=1&query=Baraka+Kauppa+Kouvola+Finland";
+  "https://www.google.com/maps/search/?api=1&query=Kouvolankatu+34+A31+45100+Kouvola+Finland";
 const FB_URL = "https://www.facebook.com/people/Baraka-Kauppa/61592352316861/";
 
 export function Visit() {
