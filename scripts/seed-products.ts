@@ -96,7 +96,7 @@ const PRODUCTS: SeedProduct[] = [
     price: 2.9,
     unit: "400 g tub",
     category: "thai",
-    image: "/images/prod-curry.png",
+    image: "/images/prod-green-curry.png",
   },
   // Arabic & Middle East
   {
@@ -178,7 +178,7 @@ const PRODUCTS: SeedProduct[] = [
     price: 3.6,
     unit: "2 kg bag",
     category: "african",
-    image: "/images/prod-flour.png",
+    image: "/images/prod-cassava.png",
   },
   // Halal meat
   {
@@ -206,7 +206,7 @@ const PRODUCTS: SeedProduct[] = [
     price: 6.9,
     unit: "per kg",
     category: "halal",
-    image: "/images/prod-chicken.png",
+    image: "/images/prod-wings.png",
   },
   // Spices & pantry
   {
@@ -220,7 +220,7 @@ const PRODUCTS: SeedProduct[] = [
     price: 1.9,
     unit: "200 g",
     category: "spices",
-    image: "/images/prod-spices.png",
+    image: "/images/prod-turmeric.png",
   },
   {
     slug: "cumin-seeds-200g",
@@ -233,7 +233,7 @@ const PRODUCTS: SeedProduct[] = [
     price: 2.2,
     unit: "200 g",
     category: "spices",
-    image: "/images/prod-spices.png",
+    image: "/images/prod-cumin.png",
   },
   {
     slug: "ground-coriander-200g",
@@ -246,7 +246,7 @@ const PRODUCTS: SeedProduct[] = [
     price: 2.0,
     unit: "200 g",
     category: "spices",
-    image: "/images/prod-spices.png",
+    image: "/images/prod-coriander.png",
   },
   {
     slug: "somali-bariis-mix-500g",
@@ -259,7 +259,7 @@ const PRODUCTS: SeedProduct[] = [
     price: 3.4,
     unit: "500 g",
     category: "spices",
-    image: "/images/prod-spices.png",
+    image: "/images/prod-bariis.png",
     badge: "new",
   },
 ];

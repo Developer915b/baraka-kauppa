@@ -134,7 +134,7 @@ export function CartSheet() {
           payload.append("subtotal", subtotal.toFixed(2));
           payload.append("deliveryFee", fee.toFixed(2));
           payload.append("total", Number(data.total).toFixed(2));
-          fetch("/", {
+          fetch("/orders-form.html", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: payload.toString(),
