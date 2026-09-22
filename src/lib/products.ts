@@ -98,11 +98,12 @@ export type ListResult = {
 
 export async function listProducts(filters: ListFilters = {}): Promise<ListResult> {
   try {
-    // 30 s in-memory cache keeps storefront browsing to one DB read per window.
+    // 60 s in-memory cache (stale-while-revalidate) keeps storefront browsing
+    // to one DB read per window; admin writes drop the cache immediately.
     const key = `products:list:${filters.category ?? ""}:${filters.q ?? ""}:${
       filters.bestSellerOnly ? "b" : ""
     }:${filters.dealsOnly ? "d" : ""}`;
-    return await cached(key, 30_000, async () => {
+    return await cached(key, 60_000, async () => {
       const parts = ["select=*", "order=category.asc,price.asc"];
       if (filters.category) parts.push(`category=eq.${encodeURIComponent(filters.category)}`);
       if (filters.bestSellerOnly) parts.push("best_seller=eq.true");
@@ -132,7 +133,7 @@ export async function listProducts(filters: ListFilters = {}): Promise<ListResul
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
-    return await cached(`products:slug:${slug}`, 60_000, async () => {
+    return await cached(`products:slug:${slug}`, 120_000, async () => {
       const rows = await sbFetch<SbProductRow[]>({
         path: `/products?select=*&slug=eq.${encodeURIComponent(slug)}&limit=1`,
       });
@@ -150,7 +151,7 @@ export async function getProductsByIds(ids: number[]): Promise<Product[]> {
   if (ids.length === 0) return [];
   const sorted = [...ids].sort((a, b) => a - b).join(",");
   try {
-    return await cached(`products:ids:${sorted}`, 30_000, async () => {
+    return await cached(`products:ids:${sorted}`, 60_000, async () => {
       const rows = await sbFetch<SbProductRow[]>({
         path: `/products?select=*&id=in.(${sorted})`,
       });

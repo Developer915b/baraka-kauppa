@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/site/language-provider";
 import { ProductCard, type CardProduct } from "@/components/site/product-card";
+import { getCachedJson, setCachedJson } from "@/lib/client-cache";
 import { cn } from "@/lib/utils";
 
 type ApiProduct = CardProduct;
@@ -46,30 +47,46 @@ export function Shop() {
     }
   }, [categoryParam]);
 
-  const load = async (cat: string, q: string) => {
-    setLoading(true);
-    setError(false);
+  // Client-side memory cache (30 s, matching the API CDN window): revisiting
+  // the shop with the same filter shows results instantly without a spinner,
+  // while a quiet background revalidation keeps data current. Focus
+  // revalidation covers the "owner just changed something" case.
+  const cacheKey = (cat: string, q: string) => `products:${cat}:${q.toLowerCase()}`;
+
+  const load = async (cat: string, q: string, silent = false) => {
+    const key = cacheKey(cat, q);
+    const hit = getCachedJson<{ products?: ApiProduct[] }>(key, 30_000);
+    if (hit?.products) setProducts(hit.products);
+    if (!silent) {
+      setLoading(true);
+      setError(false);
+    }
     try {
       const params = new URLSearchParams();
       if (cat !== "all") params.set("category", cat);
       if (q) params.set("q", q);
       const res = await fetch(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error("failed");
-      const data = await res.json();
+      const data = (await res.json()) as { products?: ApiProduct[] };
+      setCachedJson(key, data);
       setProducts(data.products ?? []);
     } catch {
-      setError(true);
+      if (!hit) setError(true);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => load(category, query), query ? 300 : 0);
+    const onFocus = () => void load(category, query, true);
+    window.addEventListener("focus", onFocus);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      window.removeEventListener("focus", onFocus);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, query]);
 
   const isFiltering = useMemo(() => category !== "all" || query.length > 0, [category, query]);

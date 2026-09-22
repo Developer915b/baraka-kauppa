@@ -18,11 +18,11 @@ export async function GET(request: NextRequest) {
   });
 
   // Short CDN cache (Netlify) on top of the in-memory server cache — keeps
-  // database reads low while prices stay fresh within 30 s.
+  // database reads low while prices stay fresh within 60 s.
   const res = NextResponse.json({ products, source });
   res.headers.set(
     "Cache-Control",
-    "public, max-age=0, s-maxage=30, stale-while-revalidate=60"
+    "public, max-age=0, s-maxage=60, stale-while-revalidate=120"
   );
   return res;
 }

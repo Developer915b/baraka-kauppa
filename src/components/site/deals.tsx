@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, BadgePercent } from "lucide-react";
 import { ProductCard, type CardProduct } from "@/components/site/product-card";
 import { useLanguage } from "@/components/site/language-provider";
+import { getCachedJson, setCachedJson } from "@/lib/client-cache";
 
 type DealsProps = {
   /** Server-rendered initial data (static catalog) for instant paint + SEO. */
@@ -17,18 +18,29 @@ export function Deals({ products: initial }: DealsProps) {
   const [products, setProducts] = useState<CardProduct[]>(initial);
 
   // Keep prices/flags in sync with the API (DB mode may differ from catalog).
+  // 30 s client cache + focus revalidation keeps repeat visits instant and
+  // current without extra database reads.
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/products?deals=true")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled && data?.products?.length) {
-          setProducts(data.products);
-        }
-      })
-      .catch(() => {});
+    const CACHE_KEY = "GET /api/products?deals=true";
+    const apply = (data: { products?: CardProduct[] } | null) => {
+      if (!cancelled && data?.products?.length) setProducts(data.products);
+    };
+    const fetchAndApply = () => {
+      fetch("/api/products?deals=true")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          setCachedJson(CACHE_KEY, data);
+          apply(data);
+        })
+        .catch(() => {});
+    };
+    apply(getCachedJson<{ products?: CardProduct[] }>(CACHE_KEY, 30_000) ?? null);
+    fetchAndApply();
+    window.addEventListener("focus", fetchAndApply);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", fetchAndApply);
     };
   }, []);
 

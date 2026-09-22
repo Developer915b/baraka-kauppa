@@ -277,3 +277,21 @@ Work Log:
 Stage Summary:
 - All new client features verified working on the production site in real time; database left clean.
 - Keepalive endpoint production-ready for cron-job.org: https://www.barakakauppa.com/api/cron/keepalive
+
+---
+Task ID: 12
+Agent: Main agent (Super Z)
+Task: Deeper local caching (fewer DB reads, zero stale after writes) + full desktop/mobile UI-UX audit with fixes, push, real-site re-test.
+
+Work Log:
+- src/lib/cache.ts upgraded to stale-while-revalidate cache: fresh within TTL; after TTL the stale value is still served instantly while a background refresh runs (single-flight), hard maxStale ceiling (10x TTL) forces a blocking refresh if background refreshes keep failing. Added in-flight request dedup — a burst of parallel misses now triggers exactly one database read instead of one per request.
+- TTLs raised: products list 30s -> 60s, product-by-slug 60s -> 120s, products-by-ids 30s -> 60s, settings 60s -> 120s; /api/products CDN header s-maxage 30 -> 60 (SWR 120). Admin reads (orders, product lists, stats) stay uncached = owner always sees live data; all admin writes still clearCache() so changes appear instantly (verified live: price 6.90 -> 6.50 -> 6.90 reflected in storefront SSR HTML immediately after each save).
+- New src/lib/client-cache.ts: tiny client-side memory cache (30 s TTL, matching CDN window) + focus revalidation; wired into shop.tsx (instant tab revisit, no spinner; background revalidation; refetch on window focus), best-sellers.tsx and deals.tsx (same pattern). Reduces repeat API/database calls on navigation and keeps changes visible within seconds.
+- Full UI/UX audit via agent-browser: desktop 1280 + mobile 390 + narrow 320, light + dark, EN + FI. Home (hero, best sellers, deals, categories, gallery, CTA, footer admin pill), shop (search incl. friendly no-results state, 8 category tabs, product cards), product detail (back button, breadcrumbs, gallery, qty stepper, info cards), cart drawer -> sign-in gate -> auth popup -> register -> prefilled checkout -> order placed (BK-MUCQDANG46 mobile, 12.40 EUR) -> account order history -> sign out; admin: login, dashboard stats, products list, edit form (photos UI with cover badge), orders with full registered-member client details, site settings. Zero horizontal overflow on every page/viewport/theme/language, zero console errors, zero page errors.
+- Checks: biome clean, tsc clean (src), NETLIFY=true production build OK (all routes as before). bun.lock untouched.
+- Cleanup: local+Supabase test order BK-MUCQDANG46 and test customer mobileaudit.tester@example.com deleted (owner's own "test" order left untouched).
+
+Stage Summary:
+- DB reads further reduced: SWR cache (serve-stale + background refresh), parallel-request dedup, longer TTLs, CDN header bump, plus a client-side micro-cache with focus revalidation.
+- Realtime preserved: admin writes invalidate the cache instantly (storefront reflects changes immediately on the writing instance, within one TTL elsewhere); admin-facing reads remain uncached; client caches revalidate on focus.
+- Full UI/UX audit passed on desktop + mobile with zero bugs or responsive defects found; no code fixes were needed beyond the cache work.

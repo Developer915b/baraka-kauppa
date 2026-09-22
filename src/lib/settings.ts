@@ -5,8 +5,9 @@
 // the defaults below when a key is missing or the table does not exist yet
 // (one-time SQL still pending), so the site keeps working with no surprises.
 //
-// Reads are cached in memory for 60 s to keep database usage minimal; admin
-// saves invalidate the cache immediately.
+// Reads are cached in memory (stale-while-revalidate) to keep database usage
+// minimal; admin saves invalidate the cache immediately so changes appear
+// instantly.
 
 import { cached, clearCache } from "@/lib/cache";
 import { SbError, sbFetch } from "@/lib/supabase";
@@ -83,7 +84,7 @@ function rowsToSettings(rows: SbSettingRow[]): SiteSettings {
 
 export async function getSettings(): Promise<SiteSettings> {
   try {
-    return await cached("settings:all", 60_000, async () => {
+    return await cached("settings:all", 120_000, async () => {
       const rows = await sbFetch<SbSettingRow[]>({ path: "/site_settings?select=key,value" });
       return rowsToSettings(rows);
     });
