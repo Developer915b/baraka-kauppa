@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
-import { filterCatalog } from "@/lib/catalog";
+import { listProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -8,90 +7,15 @@ const VALID_CATEGORIES = ["asian", "chinese", "thai", "arabic", "african", "hala
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const category = searchParams.get("category");
-  const q = searchParams.get("q")?.trim();
-  const bestSellerOnly = searchParams.get("bestseller") === "true";
-  const dealsOnly = searchParams.get("deals") === "true";
+  const categoryParam = searchParams.get("category");
+  const q = searchParams.get("q")?.trim() ?? null;
 
-  // 1) Try the database first (self-hosted / local deployments)
-  const db = getDb();
-  if (db) {
-    try {
-      const where: {
-        active: boolean;
-        category?: string;
-        bestSeller?: boolean;
-        oldPrice?: { not: null };
-        OR?: Array<{
-          nameEn?: { contains: string };
-          nameFi?: { contains: string };
-          descEn?: { contains: string };
-          descFi?: { contains: string };
-        }>;
-      } = { active: true };
-
-      if (category && VALID_CATEGORIES.includes(category)) {
-        where.category = category;
-      }
-
-      if (bestSellerOnly) {
-        where.bestSeller = true;
-      }
-
-      if (dealsOnly) {
-        where.oldPrice = { not: null };
-      }
-
-      if (q) {
-        const needle = q.toLowerCase();
-        where.OR = [
-          { nameEn: { contains: needle } },
-          { nameFi: { contains: needle } },
-          { descEn: { contains: needle } },
-          { descFi: { contains: needle } },
-        ];
-      }
-
-      const products = await db.product.findMany({
-        where,
-        orderBy: [{ category: "asc" }, { price: "asc" }],
-        select: {
-          id: true,
-          slug: true,
-          nameEn: true,
-          nameFi: true,
-          descEn: true,
-          descFi: true,
-          price: true,
-          oldPrice: true,
-          unit: true,
-          category: true,
-          image: true,
-          badge: true,
-          bestSeller: true,
-          stock: true,
-        },
-      });
-
-      return NextResponse.json({ products, source: "db" });
-    } catch (error) {
-      // Database unavailable (missing file / cold serverless env) -> fall through
-      console.error("DB product query failed, using static catalog fallback:", error);
-    }
-  }
-
-  // 2) Static catalog fallback (serverless deployments without a database)
-  let products = filterCatalog({
-    category: category && VALID_CATEGORIES.includes(category) ? category : null,
+  const { products, source } = await listProducts({
+    category: categoryParam && VALID_CATEGORIES.includes(categoryParam) ? categoryParam : null,
     q,
+    bestSellerOnly: searchParams.get("bestseller") === "true",
+    dealsOnly: searchParams.get("deals") === "true",
   });
 
-  if (bestSellerOnly) {
-    products = products.filter((p) => p.bestSeller);
-  }
-  if (dealsOnly) {
-    products = products.filter((p) => p.oldPrice != null);
-  }
-
-  return NextResponse.json({ products, source: "catalog" });
+  return NextResponse.json({ products, source });
 }

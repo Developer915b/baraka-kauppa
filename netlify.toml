@@ -11,6 +11,13 @@
   NEXT_PUBLIC_NETLIFY = "true"
   # Skip Prisma engine download for platforms we don't deploy to (faster installs)
   PRISMA_SKIP_POSTINSTALL_GENERATE = "false"
+  # Supabase project (products + orders database)
+  SUPABASE_URL = "https://gyqdrwbpgeaironcsphe.supabase.co"
+  SUPABASE_PUBLISHABLE_KEY = "sb_publishable_vLem2B8sZQXPZBi-kri9qA_etXHck4u"
+  # SECRETS — set these in the Netlify UI (Site configuration -> Environment
+  # variables), NOT in this file (GitHub push protection blocks committed secrets):
+  #   SUPABASE_SECRET_KEY  = sb_secret_...  (admin panel + order persistence)
+  #   ADMIN_PASSWORD       = your admin panel password (min 6 chars)
 
 # Official Next.js runtime: handles SSR, API routes, image optimisation, ISR, etc.
 [[plugins]]

@@ -1,8 +1,10 @@
 import type { MetadataRoute } from "next";
-import { CATALOG } from "@/lib/catalog";
+import { listProducts } from "@/lib/products";
 import { SITE_URL } from "@/lib/site";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -11,7 +13,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
   ];
 
-  const productPages: MetadataRoute.Sitemap = CATALOG.map((p) => ({
+  let products: { slug: string }[] = [];
+  try {
+    products = (await listProducts()).products;
+  } catch {
+    products = [];
+  }
+
+  const productPages: MetadataRoute.Sitemap = products.map((p) => ({
     url: `${SITE_URL}/product/${p.slug}`,
     lastModified: now,
     changeFrequency: "weekly" as const,

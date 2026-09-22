@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCatalogProduct, type CatalogProduct } from "@/lib/catalog";
+import { sbFetch } from "@/lib/supabase";
+import { getProductsByIds } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
@@ -138,7 +140,52 @@ export async function POST(request: NextRequest) {
       notes: notes ? String(notes).trim().slice(0, 500) : null,
     };
 
-    // --- Path 1: persist to database when available (self-hosted) ---
+    // --- Path 1: persist to Supabase when configured (works on any host) ---
+    try {
+      const sbProducts = await getProductsByIds(cleanItems.map((it) => it.productId));
+      if (sbProducts.length > 0) {
+        const totals = computeTotals(sbProducts, cleanItems, method);
+        if ("error" in totals) {
+          return NextResponse.json({ error: totals.error }, { status: 400 });
+        }
+
+        await sbFetch<null>({
+          method: "POST",
+          path: "/orders",
+          body: {
+            order_no: orderNo,
+            customer_name: customerData.customerName,
+            phone: customerData.phone,
+            email: customerData.email,
+            method: customerData.method,
+            address: customerData.address,
+            city: customerData.city,
+            postal_code: customerData.postalCode,
+            notes: customerData.notes,
+            items: totals.orderItems,
+            subtotal: totals.subtotal,
+            delivery_fee: totals.deliveryFee,
+            total: totals.total,
+            status: "new",
+          },
+          write: true,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          persisted: true,
+          orderNo,
+          subtotal: totals.subtotal,
+          deliveryFee: totals.deliveryFee,
+          total: totals.total,
+          itemCount: totals.orderItems.reduce((n, it) => n + it.qty, 0),
+        });
+      }
+    } catch (error) {
+      console.error("Supabase order write failed, trying local DB fallback:", error);
+    }
+
+    // --- Path 2: persist to local SQLite database when available (self-hosted) ---
     const db = getDb();
     if (db) {
       try {
@@ -177,7 +224,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // --- Path 2: serverless mode (no database) — validate + price from the
+    // --- Path 3: serverless mode (no database) — validate + price from the
     // static catalog. The order is confirmed to the customer and delivered to
     // the shop owner via the Netlify Form submission made by the client. ---
     const resolved: DbLikeProduct[] = [];

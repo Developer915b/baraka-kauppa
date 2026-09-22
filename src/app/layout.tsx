@@ -4,9 +4,6 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/site/theme-provider";
 import { LanguageProvider } from "@/components/site/language-provider";
-import { Header } from "@/components/site/header";
-import { Footer } from "@/components/site/footer";
-import { CartSheet } from "@/components/site/cart-sheet";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
 
 const geistSans = Geist({
@@ -108,17 +105,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider>
-          <LanguageProvider>
-            <div
-              suppressHydrationWarning
-              className="flex min-h-screen flex-col overflow-x-hidden bg-white dark:bg-stone-950"
-            >
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-              <CartSheet />
-            </div>
-          </LanguageProvider>
+          <LanguageProvider>{children}</LanguageProvider>
         </ThemeProvider>
         <Toaster />
       </body>

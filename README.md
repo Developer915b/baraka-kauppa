@@ -22,6 +22,13 @@ A bilingual (English 🇬🇧 / Finnish 🇫🇮) marketing website + online sto
 
 ## Features
 
+### Admin Panel (`/admin`)
+- **Password-protected store management** — sign in at `/admin` with the `ADMIN_PASSWORD` env value; session is an httpOnly cookie (7 days); every admin page and API checks it server-side
+- **Dashboard** — connection status for Supabase with a built-in 3-step setup wizard (copy-paste SQL + refresh), live stats (products, best sellers, on sale, low stock), recent orders, and a plain-language store settings summary (delivery fee, free-delivery threshold, pickup address)
+- **Products CRUD** — searchable, category-filtered list with inline badges (best seller, −% discount, highlight); create/edit form with plain labels, live price + discount preview, image URL preview with built-in photo picker, bilingual names/descriptions, category, badge, stock and "Show in Best Sellers" switch; every change is live in the store immediately
+- **Orders** — the latest 100 orders with expandable details (items, totals, customer, notes) and one-click status changes (new / done / cancelled); orders placed in the store are persisted to Supabase automatically
+- **One-click import** — seed or re-import the 18 built-in catalog products into Supabase from the dashboard
+
 ### Website
 - **Multi-page structure** — `/` (home: hero, features, **best sellers, current deals, featured categories**, gallery, CTA), `/shop` (categories + full online store), `/contact` (About + Visit + Contact merged), `/product/[slug]` (18 detail pages); per-page metadata titles
 - **SEO-friendly** — per-page titles/descriptions/canonicals, Open Graph + Twitter cards, `sitemap.xml` (all pages + products), `robots.txt`, JSON-LD structured data (`GroceryStore` on home, `Product` + `BreadcrumbList` on every product page), single-`h1` heading hierarchy, semantic HTML and descriptive alt texts. Set `NEXT_PUBLIC_SITE_URL` to the production domain for correct canonical URLs
@@ -122,6 +129,21 @@ bun run dev
 ```bash
 bun run scripts/seed-products.ts   # idempotent upsert
 ```
+
+---
+
+## Connecting Supabase (products + orders database)
+
+Products and orders live in Supabase (Postgres) so they work on any host, including Netlify serverless. Until Supabase is connected the store automatically falls back to the built-in static catalog — nothing breaks, there is just nothing to edit in the admin panel yet.
+
+1. Create a project at [supabase.com](https://supabase.com) (or use the existing one)
+2. Open **SQL Editor** in the Supabase dashboard, paste [`setup-supabase.sql`](./setup-supabase.sql) and press **Run** (creates the `products` + `orders` tables with row-level security)
+3. Set these env vars:
+   - `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` — already set in `netlify.toml` (safe, public values)
+   - `SUPABASE_SECRET_KEY` (`sb_secret_…`) and `ADMIN_PASSWORD` — **set them in the Netlify UI** (Site configuration → Environment variables). GitHub push protection blocks committing secrets, so they are intentionally not in the repo
+4. Sign in at `/admin`, open the **Dashboard** and click **Import the 18 built-in catalog products** (or add products manually)
+
+All admin product edits write straight to Supabase; the storefront reads Supabase first and only falls back to the static catalog if Supabase is unreachable.
 
 ---
 

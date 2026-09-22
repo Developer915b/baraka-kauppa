@@ -1,50 +1,24 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getDb } from "@/lib/db";
-import { CATALOG, getCatalogProductBySlug } from "@/lib/catalog";
+import { getProductBySlug, listProducts } from "@/lib/products";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { ProductDetail, type ProductDetailData } from "@/components/site/product-detail";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
-const PRODUCT_SELECT = {
-  id: true,
-  slug: true,
-  nameEn: true,
-  nameFi: true,
-  descEn: true,
-  descFi: true,
-  price: true,
-  oldPrice: true,
-  unit: true,
-  category: true,
-  image: true,
-  badge: true,
-  bestSeller: true,
-  stock: true,
-} as const;
-
-/** DB first (self-hosted), static catalog fallback (serverless). */
-async function getProductBySlug(slug: string): Promise<ProductDetailData | null> {
-  const db = getDb();
-  if (db) {
-    try {
-      const p = await db.product.findUnique({
-        where: { slug },
-        select: PRODUCT_SELECT,
-      });
-      if (p) return p;
-    } catch (error) {
-      console.error("DB product lookup failed, using static catalog fallback:", error);
-    }
+/** Supabase first (source of truth), static catalog fallback (serverless). */
+async function getProductBySlugSafe(slug: string): Promise<ProductDetailData | null> {
+  try {
+    return await getProductBySlug(slug);
+  } catch (error) {
+    console.error("Product lookup failed, using static catalog fallback:", error);
+    return null;
   }
-  const cp = getCatalogProductBySlug(slug);
-  return cp ? { ...cp } : null;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const product = await getProductBySlugSafe(slug);
   if (!product) {
     return { title: "Product not found" };
   }
@@ -71,12 +45,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductPage({ params }: PageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const product = await getProductBySlugSafe(slug);
   if (!product) notFound();
 
   // Related: same category first, then other products to fill up to 4.
-  const sameCategory = CATALOG.filter((p) => p.id !== product.id && p.category === product.category);
-  const others = CATALOG.filter((p) => p.id !== product.id && p.category !== product.category);
+  const { products: all } = await listProducts();
+  const sameCategory = all.filter((p) => p.id !== product.id && p.category === product.category);
+  const others = all.filter((p) => p.id !== product.id && p.category !== product.category);
   const related = [...sameCategory, ...others].slice(0, 4).map((p) => ({ ...p }));
 
   const productUrl = `${SITE_URL}/product/${product.slug}`;

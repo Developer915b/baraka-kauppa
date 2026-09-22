@@ -1,6 +1,27 @@
 # Worklog
 
 ---
+Task ID: 10
+Agent: Main agent (Super Z)
+Task: Full admin panel + move all products to Supabase (user provided Supabase URL/keys), make settings easy for the admin, tell the user what they must do on the Supabase side.
+
+Work Log:
+- Connectivity: REST keys verified working (publishable = anon read, secret = service writes). Direct Postgres unreachable — db.*.supabase.co is IPv6-only and the sandbox has no IPv6; pooler region scan also blocked by egress. => Table creation moved to a one-paste SQL file for the user (they said they'll do the Supabase side later)
+- setup-supabase.sql (repo root): products + orders tables, RLS enabled, public SELECT policy on products only (orders readable only via secret key), indexes; same SQL embedded in the admin dashboard wizard with a Copy button
+- New libs: src/lib/supabase.ts (PostgREST REST client over HTTPS — works on Netlify serverless, no raw Postgres needed; SbError with setupRequired detection via PGRST205; sbCheckConnection); src/lib/products.ts (unified layer: listProducts/getProductBySlug/getProductsByIds with Supabase->catalog fallback + row<->camelCase mapping + admin CRUD sbCreate/sbUpdate/sbDelete/sbSeedFromCatalog + always-slugify fix); src/lib/admin-auth.ts (sha256 token cookie, timingSafeEqual, isAdminRequest/isAdminSession); src/lib/product-input.ts (shared validation)
+- Rewired: /api/products (supabase->catalog, source field), /api/orders (Path 1 Supabase insert -> Path 2 SQLite -> Path 3 catalog/not-persisted), product/[slug] page + home page + sitemap now read via listProducts so DB products render server-side
+- Admin auth APIs: login/logout/session (session returns supabase status + setupRequired + stats). Admin APIs: products GET/POST, products/[id] PATCH/DELETE, orders GET, orders/[id] PATCH status (new/done/cancelled), seed POST (import catalog)
+- Admin UI (EN, owner-facing): /admin login card; route group admin/(panel) with server-side auth guard + AdminShell (desktop sidebar / mobile top bar); Dashboard (setup wizard + stats + recent orders + plain-language store settings card); Products list (search, category filter, badges, edit/delete with confirm dialog); Product form (bilingual names/descriptions, price + old-price with live "customer sees" discount preview, category/badge/stock, best-seller switch, image URL preview + built-in photo picker); Orders page (expandable rows, items/customer/notes, status dropdown)
+- Fixed during testing: storefront header/cart chrome leaked into admin — refactored to route groups: storefront pages moved to src/app/(site)/ with their own layout (Header/Footer/CartSheet), root layout keeps only providers + Toaster; admin has its own chrome. Missing (panel)/layout.tsx was silently absent (Write failed on missing dir) — recreated, guard + shell now work. Slug bug: server only slugified empty slugs — now always slugify (fixed 404 on created product detail pages). "Import" vs "Re-import" label by product count. TS null-narrowing fixes
+- E2E (mock PostgREST server scripts/mock-postgrest.ts on :4000 + real Supabase for fallback path): login (wrong pw rejected, correct accepted), guard redirects unauth to /admin, dashboard connection states (connected/setup-required/not-configured), import 18 products -> storefront serves source:supabase, create product -> live in shop + detail page 200, edit price -> instantly reflected (order priced at edited value), delete product -> gone, place order -> persisted to Supabase, /admin/orders shows it, status new->done, mobile 390 admin no overflow; serverless sim (real Supabase, tables missing): catalog fallback, order persisted:false 6.90 pickup correct, unauth admin API 401, login works in prod mode; NETLIFY=true build OK (all admin routes dynamic); biome + tsc clean; removed pg probe deps
+
+Stage Summary:
+- Admin panel live at /admin (password: ADMIN_PASSWORD env — set locally in .env and in the Netlify UI; never committed to the repo)
+- Products source of truth = Supabase `products` table; orders persist to Supabase `orders`; static catalog remains as automatic fallback everywhere
+- USER TODO on Supabase side (one time): run setup-supabase.sql in the SQL Editor, then click "Import" in /admin/dashboard. Keys were shared in chat — rotating them in Supabase is recommended
+- Pushed to github.com/Developer915b/baraka-kauppa (main)
+
+---
 Task ID: 9
 Agent: Main agent (Super Z)
 Task: Change price decimal separator from comma to full stop ("6,90 €" -> "6.90 €") everywhere.

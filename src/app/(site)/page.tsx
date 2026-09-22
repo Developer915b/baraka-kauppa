@@ -6,7 +6,7 @@ import { Deals } from "@/components/site/deals";
 import { Categories } from "@/components/site/categories";
 import { Gallery } from "@/components/site/gallery";
 import { HomeCta } from "@/components/site/home-cta";
-import { CATALOG } from "@/lib/catalog";
+import { listProducts } from "@/lib/products";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -68,12 +68,13 @@ const groceryStoreJsonLd = {
   hasMap: "https://www.google.com/maps/search/?api=1&query=Kouvolankatu+34+A31+45100+Kouvola",
 };
 
-export default function Home() {
-  // Initial merchandising data straight from the static catalog:
-  // server-rendered HTML contains real product names + prices (SEO),
-  // and the sections re-sync with the API after hydration.
-  const bestSellers = CATALOG.filter((p) => p.bestSeller).map((p) => ({ ...p }));
-  const deals = CATALOG.filter((p) => p.oldPrice != null).map((p) => ({ ...p }));
+export default async function Home() {
+  // Initial merchandising data from the product source of truth (Supabase,
+  // catalog fallback): server-rendered HTML contains real product names +
+  // prices (SEO), and the sections re-sync with the API after hydration.
+  const { products } = await listProducts();
+  const bestSellers = products.filter((p) => p.bestSeller).slice(0, 8).map((p) => ({ ...p }));
+  const deals = products.filter((p) => p.oldPrice != null).map((p) => ({ ...p }));
 
   return (
     <>
