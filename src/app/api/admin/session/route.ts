@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest, adminPasswordSet } from "@/lib/admin-auth";
 import { sbCheckConnection, sbStatus } from "@/lib/supabase";
 import { sbListAllProducts } from "@/lib/products";
-import { CATALOG } from "@/lib/catalog";
+import { sbFetch } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
+
+type SbOrder = { status: string; total: number | string; created_at: string };
 
 export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) {
@@ -14,12 +16,15 @@ export async function GET(request: NextRequest) {
   const sb = sbStatus();
   const connection = sb.configured
     ? await sbCheckConnection()
-    : { connected: false, setupRequired: false, message: "Supabase keys are not configured yet" };
+    : { connected: false, setupRequired: false, message: "The online store is not connected yet" };
 
   let productCount = 0;
   let bestSellerCount = 0;
   let dealCount = 0;
   let lowStockCount = 0;
+  let newOrders = 0;
+  let totalOrders = 0;
+  let revenueTotal = 0;
   if (connection.connected) {
     try {
       const rows = await sbListAllProducts();
@@ -30,19 +35,37 @@ export async function GET(request: NextRequest) {
     } catch {
       // connection state already reflects the problem
     }
+    try {
+      const orders = await sbFetch<SbOrder[]>({
+        path: "/orders?select=status,total,created_at&order=created_at.desc&limit=500",
+        write: true,
+      });
+      totalOrders = orders.length;
+      newOrders = orders.filter((o) => o.status === "new").length;
+      revenueTotal =
+        Math.round(
+          orders
+            .filter((o) => o.status !== "cancelled")
+            .reduce((sum, o) => sum + Number(o.total || 0), 0) * 100
+        ) / 100;
+    } catch {
+      // orders stats stay zeroed
+    }
   }
 
   return NextResponse.json({
     authed: true,
     adminPasswordSet: adminPasswordSet(),
-    supabase: {
-      ...sb,
-      connected: connection.connected,
-      setupRequired: connection.setupRequired,
-      message: connection.message,
+    connected: connection.connected,
+    setupRequired: connection.setupRequired,
+    stats: {
       productCount,
-      catalogCount: CATALOG.length,
+      bestSellerCount,
+      dealCount,
+      lowStockCount,
+      newOrders,
+      totalOrders,
+      revenueTotal,
     },
-    stats: { productCount, bestSellerCount, dealCount, lowStockCount },
   });
 }

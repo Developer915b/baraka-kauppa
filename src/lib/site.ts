@@ -5,7 +5,7 @@
  */
 export const SITE_URL: string =
   (process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "") ||
-    "https://baraka-kauppa.netlify.app");
+    "https://www.barakakauppa.com");
 
 export const SITE_NAME = "Baraka Kauppa";
 

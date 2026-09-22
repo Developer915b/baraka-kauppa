@@ -27,6 +27,17 @@ export function normaliseInput(body: Record<string, unknown>): ProductInput | { 
   const badge =
     badgeRaw && ["popular", "new", "fresh"].includes(String(badgeRaw)) ? String(badgeRaw) : null;
 
+  // Gallery images: up to 8 URLs, each trimmed, de-duplicated.
+  const rawImages = Array.isArray(body?.images) ? body.images : [];
+  const images: string[] = [];
+  for (const item of rawImages) {
+    const url = String(item ?? "").trim().slice(0, 600);
+    if (url !== "" && !images.includes(url)) images.push(url);
+    if (images.length >= 8) break;
+  }
+  const image =
+    String(body?.image ?? "").trim() || images[0] || "/images/prod-rice.png";
+
   return {
     slug: String(body?.slug ?? "").trim(), // empty -> the data layer slugifies from the name
     nameEn,
@@ -37,7 +48,8 @@ export function normaliseInput(body: Record<string, unknown>): ProductInput | { 
     oldPrice,
     unit: String(body?.unit ?? "").trim(),
     category: String(body?.category ?? "asian"),
-    image: String(body?.image ?? "").trim() || "/images/prod-rice.png",
+    image,
+    images,
     badge,
     bestSeller: Boolean(body?.bestSeller),
     stock,

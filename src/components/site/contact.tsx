@@ -4,32 +4,34 @@ import { motion } from "framer-motion";
 import { Facebook, Mail, Phone, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/site/language-provider";
-
-const FB_URL = "https://www.facebook.com/people/Baraka-Kauppa/61592352316861/";
+import { useSettings } from "@/components/site/settings-provider";
 
 export function Contact() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const settings = useSettings();
+
+  const contactNote = locale === "fi" ? settings.contactNoteFi : settings.contactNoteEn;
 
   const channels = [
     {
       icon: Phone,
       label: t.contact.phoneLabel,
-      value: "+358 45 8652799",
-      href: "tel:+358458652799",
+      value: settings.phone,
+      href: `tel:${settings.phone.replace(/[^+\d]/g, "")}`,
       external: false,
     },
     {
       icon: Mail,
       label: t.contact.emailLabel,
-      value: "hossainsohid@gmail.com",
-      href: "mailto:hossainsohid@gmail.com",
+      value: settings.email,
+      href: `mailto:${settings.email}`,
       external: false,
     },
     {
       icon: Facebook,
       label: t.contact.facebook,
       value: "Baraka Kauppa | Kouvola",
-      href: FB_URL,
+      href: settings.facebookUrl,
       external: true,
     },
   ];
@@ -46,7 +48,7 @@ export function Contact() {
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.5 }}
             >
-              <p className="text-sm font-semibold uppercase tracking-widest text-amber-400">
+              <p className="mt-3 text-sm font-semibold uppercase tracking-widest text-amber-400">
                 {t.contact.label}
               </p>
               <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -55,12 +57,17 @@ export function Contact() {
               <p className="mt-4 leading-relaxed text-emerald-100">
                 {t.contact.subtitle}
               </p>
+              {contactNote && (
+                <p className="mt-3 rounded-2xl bg-emerald-800/60 px-4 py-3 text-sm leading-relaxed text-emerald-100 ring-1 ring-emerald-700/50">
+                  {contactNote}
+                </p>
+              )}
               <Button
                 asChild
                 size="lg"
                 className="mt-8 h-12 rounded-full bg-amber-400 px-7 text-base font-semibold text-emerald-950 hover:bg-amber-300"
               >
-                <a href={FB_URL} target="_blank" rel="noopener noreferrer">
+                <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer">
                   <Facebook className="mr-2 h-5 w-5" aria-hidden="true" />
                   {t.contact.facebook}
                 </a>
@@ -107,7 +114,7 @@ export function Contact() {
                     {t.contact.storeLabel}
                   </span>
                   <span className="block text-sm font-semibold text-white">
-                    Kouvolankatu 34 A31, 45100 Kouvola
+                    {settings.address}, {settings.postalCode} {settings.city}
                   </span>
                   <span className="mt-0.5 block text-xs leading-relaxed text-emerald-200">
                     {t.contact.storeText}

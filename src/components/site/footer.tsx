@@ -1,13 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, ShoppingBasket, Phone, Mail, Globe } from "lucide-react";
+import { MapPin, ShoppingBasket, Phone, Mail, Globe, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/components/site/language-provider";
-
-const FB_URL = "https://www.facebook.com/people/Baraka-Kauppa/61592352316861/";
+import { useSettings } from "@/components/site/settings-provider";
 
 export function Footer() {
   const { t } = useLanguage();
+  const settings = useSettings();
+
+  const fbUrl = settings.facebookUrl;
+  const telHref = `tel:${settings.phone.replace(/[^+\d]/g, "")}`;
+  const fbLabel = (() => {
+    try {
+      return new URL(fbUrl).hostname.replace(/^www\./, "") + new URL(fbUrl).pathname.replace(/\/$/, "");
+    } catch {
+      return "Facebook";
+    }
+  })();
 
   const links = [
     { key: "home" as const, href: "/" },
@@ -31,9 +41,9 @@ export function Footer() {
                 <ShoppingBasket className="h-5 w-5" aria-hidden="true" />
               </span>
               <div className="leading-none">
-                <p className="text-lg font-bold text-white">Baraka Kauppa</p>
+                <p className="text-lg font-bold text-white">{settings.shopName}</p>
                 <p className="text-[11px] font-medium uppercase tracking-widest text-amber-400">
-                  Kouvola
+                  {settings.city}
                 </p>
               </div>
             </div>
@@ -60,7 +70,7 @@ export function Footer() {
               ))}
               <li>
                 <a
-                  href={FB_URL}
+                  href={fbUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block py-0.5 text-sm text-stone-400 transition-colors hover:text-amber-300"
@@ -79,31 +89,31 @@ export function Footer() {
             <ul className="mt-4 space-y-3 text-sm text-stone-400">
               <li>
                 <a
-                  href="tel:+358458652799"
+                  href={telHref}
                   className="flex items-start gap-2 transition-colors hover:text-amber-300"
                 >
                   <Phone className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
-                  +358 45 8652799
+                  {settings.phone}
                 </a>
               </li>
               <li>
                 <a
-                  href="mailto:hossainsohid@gmail.com"
+                  href={`mailto:${settings.email}`}
                   className="flex items-start gap-2 break-all transition-colors hover:text-amber-300"
                 >
                   <Mail className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
-                  hossainsohid@gmail.com
+                  {settings.email}
                 </a>
               </li>
               <li>
                 <a
-                  href={FB_URL}
+                  href={fbUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-start gap-2 transition-colors hover:text-amber-300"
                 >
                   <Globe className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
-                  facebook.com/Baraka Kauppa
+                  {fbLabel}
                 </a>
               </li>
             </ul>
@@ -118,9 +128,9 @@ export function Footer() {
               <li className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
                 <span>
-                  Kouvolankatu 34 A31
+                  {settings.address}
                   <br />
-                  45100 Kouvola
+                  {settings.postalCode} {settings.city}
                   <br />
                   {t.footer.madeIn}
                 </span>
@@ -134,10 +144,20 @@ export function Footer() {
             © {new Date().getFullYear()} Baraka Kauppa Oy · Business ID 3639588-4 ·{" "}
             {t.footer.rights}
           </p>
-          <p className="flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-            {t.footer.madeIn}
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+              {t.footer.madeIn}
+            </p>
+            <Link
+              href="/admin"
+              aria-label="Shop owner login"
+              title="Shop owner login"
+              className="flex items-center gap-1.5 text-stone-600 transition-colors hover:text-amber-300"
+            >
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

@@ -16,6 +16,8 @@ export type CatalogProduct = {
   unit: string;
   category: string;
   image: string;
+  /** Extra gallery photos (first photo doubles as `image`); static catalog omits it. */
+  images?: string[];
   badge: string | null;
   bestSeller: boolean;
   stock: number;

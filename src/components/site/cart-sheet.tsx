@@ -32,10 +32,13 @@ import {
 } from "lucide-react";
 import { useCart, cartCount, cartSubtotal } from "@/store/cart";
 import { useLanguage } from "@/components/site/language-provider";
+import { useSettings } from "@/components/site/settings-provider";
 import { cn } from "@/lib/utils";
 
-const DELIVERY_FEE = 4.9;
-const FREE_THRESHOLD = 40;
+/** Replace {placeholders} in a translated template string. */
+function tf(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? "");
+}
 
 /** localStorage key for the customer's last order details (checkout autofill). */
 const SAVED_DETAILS_KEY = "baraka-checkout-details";
@@ -65,6 +68,9 @@ const EMPTY_FORM: CheckoutForm = {
 export function CartSheet() {
   const { t, locale } = useLanguage();
   const { items, isOpen, closeCart, setQty, removeItem, clear } = useCart();
+  const settings = useSettings();
+  const DELIVERY_FEE = settings.deliveryFee;
+  const FREE_THRESHOLD = settings.freeDeliveryThreshold;
 
   const [step, setStep] = useState<Step>("cart");
   const [method, setMethod] = useState<"delivery" | "pickup">("delivery");
@@ -121,8 +127,30 @@ export function CartSheet() {
     }
   };
 
-  const goToCheckout = () => {
-    setSavedLoaded(loadSavedDetails());
+  /** Prefill from the signed-in customer profile — only fills empty fields. */
+  const loadCustomerProfile = async (): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      if (!res.ok) return false;
+      const body = await res.json();
+      const c = body?.customer;
+      if (!c) return false;
+      setForm((f) => ({
+        ...f,
+        customerName: f.customerName || c.name || "",
+        email: f.email || c.email || "",
+        phone: f.phone || c.phone || "",
+      }));
+      return Boolean(c.name || c.email);
+    } catch {
+      return false;
+    }
+  };
+
+  const goToCheckout = async () => {
+    const savedLoaded = loadSavedDetails();
+    const profileLoaded = await loadCustomerProfile();
+    setSavedLoaded(savedLoaded || profileLoaded);
     setStep("checkout");
   };
 
@@ -336,7 +364,7 @@ export function CartSheet() {
                 {subtotal < FREE_THRESHOLD && (
                   <p className="mb-1 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:bg-amber-400/10 dark:text-amber-300">
                     <Truck className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    {t.cart.freeDeliveryHint}
+                    {tf(t.cart.freeDeliveryHint, { free: String(FREE_THRESHOLD) })}
                   </p>
                 )}
                 <div className="space-y-1.5 text-sm">
@@ -451,7 +479,11 @@ export function CartSheet() {
                         {t.checkout.delivery}
                       </span>
                       <span className="mt-0.5 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">
-                        {t.checkout.deliveryDesc}
+                        {tf(t.checkout.deliveryDesc, {
+                          fee: `${DELIVERY_FEE.toFixed(2)}`,
+                          free: String(FREE_THRESHOLD),
+                          area: settings.deliveryArea,
+                        })}
                       </span>
                     </span>
                   </button>
@@ -478,7 +510,9 @@ export function CartSheet() {
                         {t.checkout.pickup}
                       </span>
                       <span className="mt-0.5 block text-xs leading-relaxed text-stone-500 dark:text-stone-400">
-                        {t.checkout.pickupDesc}
+                        {tf(t.checkout.pickupDesc, {
+                          address: `${settings.address}`,
+                        })}
                       </span>
                     </span>
                   </button>

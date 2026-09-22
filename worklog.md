@@ -203,3 +203,35 @@ Stage Summary:
 - Every product page now has a working, localized Back button above the breadcrumbs
 - Fixed the product page header-overlap bug (breadcrumbs were previously covered by the fixed header)
 - Pushed to github.com/Developer915b/baraka-kauppa (main)
+
+---
+Task ID: 10
+Agent: Main agent (Super Z)
+Task: Admin image upload (multi/single, auto-optimised to Supabase Storage), de-tech admin panel, Site Settings page (address/contacts/delivery fee), client accounts (sign-in + order history), admin order client details, footer admin icon, DB-read caching, full E2E testing, real-domain check.
+
+Work Log:
+- Verified Supabase state: products table seeded (18), product_images bucket exists AND is public; site_settings/customers missing -> prepared setup-supabase-upgrade.sql
+- Applied the upgrade SQL directly by discovering the project's IPv4 pooler region (aws-0-eu-north-1.pooler.supabase.com; direct db host is IPv6-only here) with a temporary `pg` dependency (removed after; bun.lock unchanged). Added products.images jsonb, customers table, site_settings table, orders.customer_id, RLS enabled on customers+site_settings (no public policies -> only secret key), public-read policy on product_images
+- Image pipeline (src/lib/storage.ts + POST /api/admin/upload): multipart upload -> sharp rotate() + resize to fit 1000x1000 (no upscale) + WebP q85 -> upload to Supabase Storage bucket product_images -> returns public URL. Limits: 8 files/request, 12 MB/file, mime allow-list
+- product-form.tsx: photo gallery UI (drag-drop + file picker, multiple), Cover badge, make-cover/remove buttons, "add by link" + built-in photos tucked into details; submit saves image=cover + images array; edit page hydrates gallery. CRITICAL FIX: gallery thumbnails use plain <img> — next/image threw on the remote supabase host and crashed the page ("Application error")
+- products.ts: Product.images support (jsonb array, tolerant parsing), write-retry fallback when the images column is missing (PGRST204) so admin CRUD keeps working pre-upgrade; listProducts/getProductBySlug/getProductsByIds wrapped in TTL cache + clearCache() on all admin writes
+- src/lib/cache.ts: tiny in-memory TTL cache (30-60s storefront reads) to cut DB usage; GET /api/products also sets CDN Cache-Control s-maxage=30, stale-while-revalidate=60
+- Site settings (src/lib/settings.ts, /api/settings, /api/admin/settings): typed SiteSettings with defaults = current site data (address, phone, email, hours x3, FB link, delivery fee 4.90, free threshold 40, delivery area, contact note EN/FI); 60s cache, upsert key/value rows
+- SettingsProvider (server layout fetch -> context): footer (contacts/address/shop name/FB), visit (hours/address/maps query), contact (channels + optional welcome note), cart-sheet checkout (fee/threshold/address texts via {fee}/{free}/{area}/{address} templates in i18n), product-detail delivery/pickup texts — all owner-editable with safe fallbacks
+- Dashboard de-tech: removed SETUP_SQL/Supabase jargon; now greeting + stat cards (new orders, total sales, products, best sellers), low-stock nudge, quick actions, latest 5 orders, "everything running smoothly" reassurance. Orders page setupRequired copy de-teched too
+- /admin/settings page: friendly sections (Shop details, Address, Contact info, Opening hours, Delivery, Contact page message) with plain-language hints; admin-shell nav gained "Site settings"
+- Client accounts: customers table + scrypt password hashing, HMAC-signed httpOnly session cookie (bk_customer_session, 30d); /api/auth/register|login|logout|me, /api/account/orders (customer_id OR email match); /login (sign-in/create tabs, EN/FI), /account (profile card + order history with status chips, items, totals); header account icon (desktop + mobile menu)
+- Checkout: signed-in customers get name/email/phone prefilled from profile; orders attach customer_id server-side (with graceful skip if column missing); admin orders show "Member/Registered member" badges + click-to-call/mail links + full client details
+- Footer: subtle ShieldCheck icon -> /admin ("Shop owner login") next to copyright
+- Testing: E2E verified register->prefill->order->account history, admin login, dashboard stats (restored missing product id 10 via /api/admin/seed -> 18 products), multi-photo upload + cover + save + storefront gallery thumbnails + photo switching, settings save -> storefront contact/checkout reflect -> revert, orders Member badge; desktop 1280 + mobile 390 zero overflow; biome/tsc clean; NETLIFY=true build OK
+- Cleanup: test orders/customers deleted, 13 test webp files removed from bucket, product 1 gallery reset
+- Real site: barakakauppa.com live (308 -> www, serving the store) -> SITE_URL default updated to https://www.barakakauppa.com for canonicals/JSON-LD/sitemap
+
+Stage Summary:
+- Admin can now upload product photos (multi/single) which are auto-optimised (WebP q85, <=1000px, ~10-90% smaller) into the product_images bucket — no DB space used (URLs only)
+- Admin panel is fully non-technical: no SQL/env/URL jargon anywhere in the UI
+- Site data (address, contacts, hours, delivery fee/threshold/area, contact note) editable in admin with instant storefront effect and safe defaults
+- Customers can register/sign in, track order history; admin sees full client details per order
+- DB reads reduced via TTL in-memory cache + CDN cache headers + cache invalidation on writes
+- Dev daemon trick: scripts/start-dev-daemon.cjs (detached spawn) — plain `setsid bun dev` dies between tool sessions in this sandbox
+- Pushed to github.com/Developer915b/baraka-kauppa (main)

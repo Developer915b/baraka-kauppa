@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getCatalogProduct, type CatalogProduct } from "@/lib/catalog";
-import { sbFetch } from "@/lib/supabase";
+import { sbFetch, SbError } from "@/lib/supabase";
 import { getProductsByIds } from "@/lib/products";
+import { getSettings } from "@/lib/settings";
+import { getCustomerIdFromRequest } from "@/lib/customer-auth";
 
 export const dynamic = "force-dynamic";
-
-const DELIVERY_FEE = 4.9;
-const FREE_DELIVERY_THRESHOLD = 40;
 
 type IncomingItem = {
   productId: number;
@@ -40,7 +39,9 @@ type Totals = {
 function computeTotals(
   products: (DbLikeProduct | CatalogProduct)[],
   cleanItems: IncomingItem[],
-  method: string
+  method: string,
+  deliveryFee: number,
+  freeThreshold: number
 ): Totals | { error: string } {
   const productMap = new Map(products.map((p) => [p.id, p]));
   const orderItems: OrderItemPayload[] = [];
@@ -62,11 +63,11 @@ function computeTotals(
 
   const subtotal =
     Math.round(orderItems.reduce((sum, it) => sum + it.lineTotal, 0) * 100) / 100;
-  const deliveryFee =
-    method === "delivery" && subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_FEE : 0;
-  const total = Math.round((subtotal + deliveryFee) * 100) / 100;
+  const fee =
+    method === "delivery" && subtotal < freeThreshold ? deliveryFee : 0;
+  const total = Math.round((subtotal + fee) * 100) / 100;
 
-  return { orderItems, subtotal, deliveryFee, total };
+  return { orderItems, subtotal, deliveryFee: fee, total };
 }
 
 function generateOrderNo(): string {
@@ -128,7 +129,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
-    const orderNo = generateOrderNo();
+    // Owner-editable shop settings (delivery fee etc.), served from cache.
+    const settings = await getSettings();
     const customerData = {
       customerName: customerName.trim(),
       phone: phone.trim(),
@@ -140,36 +142,54 @@ export async function POST(request: NextRequest) {
       notes: notes ? String(notes).trim().slice(0, 500) : null,
     };
 
+    const orderNo = generateOrderNo();
+
     // --- Path 1: persist to Supabase when configured (works on any host) ---
     try {
       const sbProducts = await getProductsByIds(cleanItems.map((it) => it.productId));
       if (sbProducts.length > 0) {
-        const totals = computeTotals(sbProducts, cleanItems, method);
+        const totals = computeTotals(
+          sbProducts,
+          cleanItems,
+          method,
+          settings.deliveryFee,
+          settings.freeDeliveryThreshold
+        );
         if ("error" in totals) {
           return NextResponse.json({ error: totals.error }, { status: 400 });
         }
 
-        await sbFetch<null>({
-          method: "POST",
-          path: "/orders",
-          body: {
-            order_no: orderNo,
-            customer_name: customerData.customerName,
-            phone: customerData.phone,
-            email: customerData.email,
-            method: customerData.method,
-            address: customerData.address,
-            city: customerData.city,
-            postal_code: customerData.postalCode,
-            notes: customerData.notes,
-            items: totals.orderItems,
-            subtotal: totals.subtotal,
-            delivery_fee: totals.deliveryFee,
-            total: totals.total,
-            status: "new",
-          },
-          write: true,
-        });
+        // Attach the signed-in customer account when there is one. The
+        // customer_id column comes from the upgrade SQL; if it is not there
+        // yet we simply save the order without it.
+        const customerId = getCustomerIdFromRequest(request);
+        const orderRow: Record<string, unknown> = {
+          order_no: orderNo,
+          customer_name: customerData.customerName,
+          phone: customerData.phone,
+          email: customerData.email,
+          method: customerData.method,
+          address: customerData.address,
+          city: customerData.city,
+          postal_code: customerData.postalCode,
+          notes: customerData.notes,
+          items: totals.orderItems,
+          subtotal: totals.subtotal,
+          delivery_fee: totals.deliveryFee,
+          total: totals.total,
+          status: "new",
+        };
+        if (customerId) orderRow.customer_id = customerId;
+        try {
+          await sbFetch<null>({ method: "POST", path: "/orders", body: orderRow, write: true });
+        } catch (colErr) {
+          if (customerId && colErr instanceof SbError && /customer_id/i.test(colErr.message)) {
+            delete orderRow.customer_id;
+            await sbFetch<null>({ method: "POST", path: "/orders", body: orderRow, write: true });
+          } else {
+            throw colErr;
+          }
+        }
 
         return NextResponse.json({
           ok: true,
@@ -194,7 +214,13 @@ export async function POST(request: NextRequest) {
           where: { id: { in: ids }, active: true },
         });
 
-        const totals = computeTotals(dbProducts, cleanItems, method);
+        const totals = computeTotals(
+          dbProducts,
+          cleanItems,
+          method,
+          settings.deliveryFee,
+          settings.freeDeliveryThreshold
+        );
         if ("error" in totals) {
           return NextResponse.json({ error: totals.error }, { status: 400 });
         }
@@ -238,7 +264,13 @@ export async function POST(request: NextRequest) {
       }
       resolved.push({ id: p.id, slug: p.slug, nameEn: p.nameEn, price: p.price });
     }
-    const catalogTotals = computeTotals(resolved, cleanItems, method);
+    const catalogTotals = computeTotals(
+      resolved,
+      cleanItems,
+      method,
+      settings.deliveryFee,
+      settings.freeDeliveryThreshold
+    );
     if ("error" in catalogTotals) {
       return NextResponse.json({ error: catalogTotals.error }, { status: 400 });
     }

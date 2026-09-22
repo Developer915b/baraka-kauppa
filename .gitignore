@@ -72,3 +72,4 @@ download
 db/*.db
 scripts/ui-*.png
 scripts/check-*.png
+.zscripts/

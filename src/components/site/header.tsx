@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   Sun,
   Moon,
+  UserRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/site/language-provider";
@@ -160,6 +161,20 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Account link */}
+          <Link
+            href="/account"
+            aria-label={t.account.title}
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
+              solid
+                ? "text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-stone-300 dark:hover:bg-stone-800"
+                : "text-white/90 hover:bg-white/10 hover:text-white"
+            )}
+          >
+            <UserRound className="h-5 w-5" aria-hidden="true" />
+          </Link>
+
           {/* Cart button */}
           <Button
             size="sm"
@@ -274,6 +289,16 @@ export function Header() {
                   </Link>
                 );
               })}
+
+              {/* Account row */}
+              <Link
+                href="/account"
+                onClick={closeMenu}
+                className="flex items-center gap-2 rounded-xl px-4 py-3.5 text-base font-medium text-stone-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 dark:text-stone-300 dark:hover:bg-stone-800"
+              >
+                <UserRound className="h-5 w-5" aria-hidden="true" />
+                {t.account.title}
+              </Link>
 
               {/* Language + theme controls for small screens */}
               <div className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 p-3 dark:bg-stone-900">

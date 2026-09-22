@@ -21,6 +21,11 @@ export default async function AdminEditProductPage({
   }
   if (!product) notFound();
 
+  const gallery: string[] = [];
+  for (const url of [product.image, ...(product.images ?? [])]) {
+    if (url && !gallery.includes(url)) gallery.push(url);
+  }
+
   const initial: ProductFormValues = {
     nameEn: product.nameEn,
     nameFi: product.nameFi,
@@ -30,7 +35,7 @@ export default async function AdminEditProductPage({
     oldPrice: product.oldPrice == null ? "" : String(product.oldPrice),
     unit: product.unit,
     category: product.category,
-    image: product.image,
+    images: gallery,
     badge: product.badge ?? "none",
     bestSeller: product.bestSeller,
     stock: String(product.stock),

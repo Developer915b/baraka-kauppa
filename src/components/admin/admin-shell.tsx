@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   ShoppingBasket,
+  Store,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ReceiptText },
+  { href: "/admin/settings", label: "Site settings", icon: Store },
 ] as const;
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

@@ -1,9 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  ImagePlus,
+  Loader2,
+  Save,
+  Star,
+  Trash2,
+  UploadCloud,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +29,8 @@ export type ProductFormValues = {
   oldPrice: string;
   unit: string;
   category: string;
-  image: string;
+  /** Photo gallery — the first photo is the cover shown in the shop. */
+  images: string[];
   badge: string;
   bestSeller: boolean;
   stock: string;
@@ -36,7 +45,7 @@ export const EMPTY_PRODUCT: ProductFormValues = {
   oldPrice: "",
   unit: "",
   category: "asian",
-  image: "",
+  images: [],
   badge: "none",
   bestSeller: false,
   stock: "25",
@@ -85,6 +94,10 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
   const [values, setValues] = useState<ProductFormValues>(initial ?? EMPTY_PRODUCT);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(0); // number of photos still uploading
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const set = <K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) =>
     setValues((v) => ({ ...v, [key]: value }));
@@ -94,11 +107,53 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
   const discounted = oldPrice != null && Number.isFinite(oldPrice) && Number.isFinite(price) && oldPrice > price;
   const pct = discounted ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
 
-  const imageSrc = useMemo(() => {
-    if (!values.image.trim()) return null;
-    return values.image.trim();
-  }, [values.image]);
+  const cover = values.images[0] ?? null;
 
+  // ---------- Photo handling ----------
+  const addImages = (urls: string[]) =>
+    setValues((v) => {
+      const merged = [...v.images];
+      for (const url of urls) {
+        if (!merged.includes(url) && merged.length < 8) merged.push(url);
+      }
+      return { ...v, images: merged };
+    });
+
+  const uploadFiles = async (files: FileList | File[]) => {
+    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (list.length === 0) {
+      setUploadError("Please choose photo files (JPG, PNG, WebP or HEIC).");
+      return;
+    }
+    setUploadError(null);
+    setUploading((n) => n + list.length);
+    try {
+      for (let i = 0; i < list.length; i += 4) {
+        const batch = list.slice(i, i + 4);
+        const form = new FormData();
+        for (const f of batch) form.append("files", f);
+        const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+        const body = await res.json().catch(() => ({}));
+        if (res.ok && Array.isArray(body.urls)) {
+          addImages(body.urls as string[]);
+        } else {
+          setUploadError(body.error ?? "Uploading failed. Please try again.");
+        }
+        setUploading((n) => Math.max(0, n - batch.length));
+      }
+    } catch {
+      setUploadError("Uploading failed. Check your connection and try again.");
+      setUploading(0);
+    }
+  };
+
+  const makeCover = (url: string) =>
+    setValues((v) => ({ ...v, images: [url, ...v.images.filter((u) => u !== url)] }));
+
+  const removeImage = (url: string) =>
+    setValues((v) => ({ ...v, images: v.images.filter((u) => u !== url) }));
+
+  // ---------- Save ----------
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -120,7 +175,8 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
         oldPrice: values.oldPrice.trim() === "" ? null : oldPrice,
         unit: values.unit.trim(),
         category: values.category,
-        image: imageSrc || "/images/prod-rice.png",
+        image: cover ?? "/images/prod-rice.png",
+        images: values.images,
         badge: values.badge === "none" ? null : values.badge,
         bestSeller: values.bestSeller,
         stock: Math.max(0, Math.round(Number(values.stock) || 0)),
@@ -304,43 +360,146 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
           </section>
         </div>
 
-        {/* Right: image */}
+        {/* Right: photos */}
         <div className="space-y-5">
           <section className="space-y-4 rounded-2xl bg-white p-5 ring-1 ring-stone-200">
-            <h2 className="font-bold text-stone-900">Product photo</h2>
-            <div className="space-y-1.5">
-              <Label htmlFor="image" className={labelCls}>Image address (URL)</Label>
-              <Input id="image" value={values.image} onChange={(e) => set("image", e.target.value)} placeholder="/images/prod-rice.png or https://…" className={field} />
-              <p className="text-xs text-stone-500">
-                Paste any image link. Photos already in the store look like <code className="rounded bg-stone-100 px-1">/images/prod-…png</code>.
-              </p>
-            </div>
-            <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-stone-100 ring-1 ring-stone-200">
-              {imageSrc ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={imageSrc} alt="Product preview" className="h-full w-full object-cover" />
-              ) : (
-                <p className="px-6 text-center text-xs text-stone-400">Photo preview appears here</p>
+            <h2 className="font-bold text-stone-900">Photos</h2>
+            <p className="text-xs text-stone-500">
+              The first photo is the cover. Every photo is automatically resized and compressed for
+              the web — quality stays sharp.
+            </p>
+
+            {/* Upload dropzone */}
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
+              }}
+              className={cn(
+                "flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-colors",
+                dragOver ? "border-emerald-600 bg-emerald-50" : "border-stone-300 bg-stone-50"
               )}
+            >
+              <UploadCloud className="h-8 w-8 text-emerald-700" aria-hidden="true" />
+              <p className="text-sm font-semibold text-stone-700">
+                {uploading > 0 ? `Optimising ${uploading} photo${uploading > 1 ? "s" : ""}…` : "Drag photos here"}
+              </p>
+              <p className="text-xs text-stone-500">or</p>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploading > 0}
+                onClick={() => fileInput.current?.click()}
+                className="h-10 rounded-xl border-emerald-700 font-semibold text-emerald-800 hover:bg-emerald-50"
+              >
+                {uploading > 0 ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <ImagePlus className="mr-2 h-4 w-4" aria-hidden="true" />
+                )}
+                Choose photos
+              </Button>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.length) uploadFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              <p className="text-[11px] text-stone-400">JPG, PNG, WebP or HEIC · up to 12 MB each</p>
             </div>
-            <details className="text-xs text-stone-500">
-              <summary className="cursor-pointer font-semibold text-stone-600">Use a built-in store photo</summary>
-              <div className="mt-2 grid grid-cols-4 gap-2">
-                {IMAGE_SUGGESTIONS.map((src) => (
-                  <button
-                    key={src}
-                    type="button"
-                    onClick={() => set("image", src)}
-                    className={cn(
-                      "overflow-hidden rounded-lg ring-2 transition-all",
-                      values.image === src ? "ring-emerald-600" : "ring-transparent hover:ring-stone-300"
+            {uploadError && (
+              <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                {uploadError}
+              </p>
+            )}
+
+            {/* Gallery */}
+            {values.images.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {values.images.map((url, idx) => (
+                  <div key={url} className="group relative overflow-hidden rounded-xl ring-1 ring-stone-200">
+                    <div className="relative aspect-square bg-stone-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt={`Product photo ${idx + 1}`}
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    </div>
+                    {idx === 0 ? (
+                      <span className="absolute left-1 top-1 rounded-full bg-emerald-700 px-2 py-0.5 text-[10px] font-bold text-white">
+                        Cover
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => makeCover(url)}
+                        className="absolute left-1 top-1 rounded-full bg-white/90 p-1 text-stone-600 shadow-sm hover:text-emerald-700"
+                        aria-label="Make this the cover photo"
+                      >
+                        <Star className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
                     )}
-                    aria-label={`Use image ${src}`}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} alt="" className="aspect-square w-full object-cover" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => removeImage(url)}
+                      className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-stone-600 shadow-sm hover:text-red-600"
+                      aria-label="Remove this photo"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  </div>
                 ))}
+              </div>
+            )}
+
+            <details className="text-xs text-stone-500">
+              <summary className="cursor-pointer font-semibold text-stone-600">
+                Add a photo by link or use a built-in store photo
+              </summary>
+              <div className="mt-3 space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="https://example.com/photo.jpg"
+                    className="h-10 rounded-xl"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const input = e.currentTarget;
+                        if (input.value.trim()) {
+                          addImages([input.value.trim()]);
+                          input.value = "";
+                        }
+                      }
+                    }}
+                  />
+                </div>
+                <p className="text-[11px]">Paste the link and press Enter.</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {IMAGE_SUGGESTIONS.map((src) => (
+                    <button
+                      key={src}
+                      type="button"
+                      onClick={() => addImages([src])}
+                      className="overflow-hidden rounded-lg ring-2 ring-transparent transition-all hover:ring-stone-300"
+                      aria-label={`Use image ${src}`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={src} alt="" className="aspect-square w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
               </div>
             </details>
           </section>

@@ -4,13 +4,23 @@ import { motion } from "framer-motion";
 import { MapPin, Clock, Facebook, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/site/language-provider";
-
-const MAPS_URL =
-  "https://www.google.com/maps/search/?api=1&query=Kouvolankatu+34+A31+45100+Kouvola+Finland";
-const FB_URL = "https://www.facebook.com/people/Baraka-Kauppa/61592352316861/";
+import { useSettings } from "@/components/site/settings-provider";
 
 export function Visit() {
   const { t } = useLanguage();
+  const settings = useSettings();
+
+  const mapsQuery = encodeURIComponent(
+    `${settings.address} ${settings.postalCode} ${settings.city} Finland`
+  );
+  const MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
+  const FB_URL = settings.facebookUrl;
+
+  const hoursRows = [
+    { day: t.visit.hours[0]?.day ?? "", time: settings.hoursWeekdays },
+    { day: t.visit.hours[1]?.day ?? "", time: settings.hoursSaturday },
+    { day: t.visit.hours[2]?.day ?? "", time: settings.hoursSunday },
+  ];
 
   return (
     <section id="visit" className="scroll-mt-20 bg-stone-50 py-20 dark:bg-stone-900/40 sm:py-24">
@@ -61,9 +71,9 @@ export function Visit() {
                   <MapPin className="h-7 w-7 text-emerald-950" aria-hidden="true" />
                 </span>
                 <p className="mt-3 text-lg font-semibold drop-shadow">
-                  Baraka Kauppa
+                  {settings.shopName}
                 </p>
-                <p className="text-sm text-emerald-100">Kouvola · Finland</p>
+                <p className="text-sm text-emerald-100">{settings.city} · Finland</p>
               </div>
             </div>
             <div className="p-6 sm:p-8">
@@ -72,9 +82,11 @@ export function Visit() {
                 {t.visit.addressTitle}
               </h3>
               <p className="mt-3 text-base font-medium text-stone-800 dark:text-stone-100">
-                {t.visit.address}
+                {settings.address}
               </p>
-              <p className="text-base text-stone-600 dark:text-stone-400">{t.visit.city}</p>
+              <p className="text-base text-stone-600 dark:text-stone-400">
+                {settings.postalCode} {settings.city}, Finland
+              </p>
               <Button
                 asChild
                 className="mt-5 rounded-full bg-emerald-700 hover:bg-emerald-800"
@@ -101,7 +113,7 @@ export function Visit() {
                 {t.visit.hoursTitle}
               </h3>
               <ul className="mt-4 divide-y divide-stone-100 dark:divide-stone-800">
-                {t.visit.hours.map((row) => (
+                {hoursRows.map((row) => (
                   <li
                     key={row.day}
                     className="flex items-center justify-between py-3 text-base"

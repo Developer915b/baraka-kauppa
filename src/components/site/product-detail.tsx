@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/components/site/language-provider";
+import { useSettings } from "@/components/site/settings-provider";
 import { useCart } from "@/store/cart";
 import { useToast } from "@/hooks/use-toast";
 import { ProductCard, type CardProduct } from "@/components/site/product-card";
@@ -27,6 +28,8 @@ import { cn } from "@/lib/utils";
 export type ProductDetailData = CardProduct & {
   category: string;
   bestSeller: boolean;
+  /** Extra gallery photos (cover is `image`). */
+  images?: string[];
 };
 
 const BADGE_STYLES: Record<string, string> = {
@@ -42,6 +45,17 @@ type ProductDetailProps = {
 
 export function ProductDetail({ product, related }: ProductDetailProps) {
   const { t, locale } = useLanguage();
+  const settings = useSettings();
+  const [photo, setPhoto] = useState(product.image);
+  const gallery = product.images && product.images.length > 0
+    ? [product.image, ...product.images.filter((u) => u !== product.image)]
+    : [product.image];
+  const deliveryInfo = (s: string) =>
+    s
+      .replace(/\{fee\}/g, settings.deliveryFee.toFixed(2))
+      .replace(/\{free\}/g, String(settings.freeDeliveryThreshold))
+      .replace(/\{area\}/g, settings.deliveryArea)
+      .replace(/\{address\}/g, settings.address);
   const { toast } = useToast();
   const router = useRouter();
   const addItem = useCart((s) => s.addItem);
@@ -147,27 +161,48 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
-            className="relative aspect-square overflow-hidden rounded-3xl bg-stone-100 ring-1 ring-stone-200/70 dark:bg-stone-800 dark:ring-stone-800"
+            className="space-y-3"
           >
-            <img
-              src={product.image}
-              alt={name}
-              className="h-full w-full object-cover"
-            />
-            {product.badge && BADGE_STYLES[product.badge] && (
-              <span
-                className={cn(
-                  "absolute left-4 top-4 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide shadow",
-                  BADGE_STYLES[product.badge]
-                )}
-              >
-                {t.shop.badges[product.badge as keyof typeof t.shop.badges] ?? product.badge}
-              </span>
-            )}
-            {discounted && (
-              <span className="absolute right-4 top-4 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow">
-                −{discountPct}%
-              </span>
+            <div className="relative aspect-square overflow-hidden rounded-3xl bg-stone-100 ring-1 ring-stone-200/70 dark:bg-stone-800 dark:ring-stone-800">
+              <img
+                src={photo}
+                alt={name}
+                className="h-full w-full object-cover"
+              />
+              {product.badge && BADGE_STYLES[product.badge] && (
+                <span
+                  className={cn(
+                    "absolute left-4 top-4 rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide shadow",
+                    BADGE_STYLES[product.badge]
+                  )}
+                >
+                  {t.shop.badges[product.badge as keyof typeof t.shop.badges] ?? product.badge}
+                </span>
+              )}
+              {discounted && (
+                <span className="absolute right-4 top-4 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow">
+                  −{discountPct}%
+                </span>
+              )}
+            </div>
+            {gallery.length > 1 && (
+              <div className="grid grid-cols-5 gap-2">
+                {gallery.slice(0, 10).map((url) => (
+                  <button
+                    key={url}
+                    type="button"
+                    onClick={() => setPhoto(url)}
+                    aria-label="Show this photo"
+                    className={cn(
+                      "overflow-hidden rounded-xl ring-2 transition-all",
+                      photo === url ? "ring-emerald-600" : "ring-transparent hover:ring-stone-300"
+                    )}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt="" className="aspect-square w-full object-cover" />
+                  </button>
+                ))}
+              </div>
             )}
           </motion.div>
 
@@ -297,13 +332,13 @@ export function ProductDetail({ product, related }: ProductDetailProps) {
               <div className="flex items-start gap-3 rounded-2xl bg-stone-50 p-4 ring-1 ring-stone-200/70 dark:bg-stone-900 dark:ring-stone-800">
                 <Truck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                 <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-300">
-                  {t.product.deliveryText}
+                  {deliveryInfo(t.product.deliveryText)}
                 </p>
               </div>
               <div className="flex items-start gap-3 rounded-2xl bg-stone-50 p-4 ring-1 ring-stone-200/70 dark:bg-stone-900 dark:ring-stone-800">
                 <Store className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                 <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-300">
-                  {t.product.pickupText}
+                  {deliveryInfo(t.product.pickupText)}
                 </p>
               </div>
               <div className="flex items-start gap-3 rounded-2xl bg-stone-50 p-4 ring-1 ring-stone-200/70 dark:bg-stone-900 dark:ring-stone-800 sm:col-span-2">

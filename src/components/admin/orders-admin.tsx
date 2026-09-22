@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { ChevronDown, Loader2, ReceiptText, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +26,7 @@ type Order = {
   delivery_fee: number | string;
   total: number | string;
   status: string;
+  customer_id?: number | null;
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -104,13 +104,10 @@ export function OrdersAdmin() {
         <div className="flex items-start gap-3 rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
           <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
           <div className="text-sm text-amber-900">
-            <p className="font-semibold">Database not set up yet.</p>
+            <p className="font-semibold">Your store isn&apos;t connected yet.</p>
             <p>
-              Open the{" "}
-              <Link href="/admin/dashboard" className="font-semibold underline">
-                Dashboard
-              </Link>{" "}
-              and follow the 3-step Supabase setup to start collecting orders here.
+              Orders aren&apos;t being saved until the shop database is set up. Please finish the
+              one-time setup first — after that every order appears here automatically.
             </p>
           </div>
         </div>
@@ -141,7 +138,14 @@ export function OrdersAdmin() {
                   >
                     <ChevronDown className={cn("h-5 w-5 shrink-0 text-stone-400 transition-transform", open && "rotate-180")} aria-hidden="true" />
                     <div className="min-w-0">
-                      <p className="font-semibold text-stone-900">{o.order_no}</p>
+                      <p className="font-semibold text-stone-900">
+                        {o.order_no}
+                        {o.customer_id && (
+                          <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                            Member
+                          </span>
+                        )}
+                      </p>
                       <p className="truncate text-xs text-stone-500">
                         {o.customer_name} · {new Date(o.created_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
                       </p>
@@ -190,10 +194,22 @@ export function OrdersAdmin() {
                       </div>
                       <div>
                         <p className="font-semibold text-stone-700">Customer</p>
-                        <p className="mt-1.5 text-stone-600">{o.customer_name}</p>
-                        <p className="text-stone-600">{o.phone}{o.email ? ` · ${o.email}` : ""}</p>
+                        {o.customer_id && (
+                          <p className="mt-1 inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                            Registered member
+                          </p>
+                        )}
+                        <p className="mt-1 font-medium text-stone-800">{o.customer_name}</p>
+                        <p className="text-stone-600">
+                          Phone: <a href={`tel:${o.phone}`} className="font-medium text-emerald-700 hover:underline">{o.phone}</a>
+                        </p>
+                        {o.email && (
+                          <p className="text-stone-600">
+                            Email: <a href={`mailto:${o.email}`} className="font-medium text-emerald-700 hover:underline">{o.email}</a>
+                          </p>
+                        )}
                         {o.method === "delivery" ? (
-                          <p className="mt-1 text-stone-600">{o.address}, {o.postal_code} {o.city}</p>
+                          <p className="mt-1 text-stone-600">Address: {o.address}, {o.postal_code} {o.city}</p>
                         ) : (
                           <p className="mt-1 text-stone-600">Pickup at the store</p>
                         )}
