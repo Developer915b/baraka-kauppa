@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/site/language-provider";
+import { useAuth } from "@/components/site/auth-provider";
 import { cn } from "@/lib/utils";
 
 export type AccountCustomer = {
@@ -53,6 +54,7 @@ const STATUS_STYLES: Record<string, string> = {
 export function AccountView({ customer }: { customer: AccountCustomer }) {
   const router = useRouter();
   const { t, locale } = useLanguage();
+  const { signOut } = useAuth();
   const [orders, setOrders] = useState<AccountOrder[] | null>(null);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -72,9 +74,11 @@ export function AccountView({ customer }: { customer: AccountCustomer }) {
     })();
   }, []);
 
-  const signOut = async () => {
+  const signOutAndGoHome = async () => {
     setSigningOut(true);
-    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    // Provider clears the session cookie + local state so the header icon
+    // switches back to the sign-in state immediately.
+    await signOut();
     router.push("/");
     router.refresh();
   };
@@ -113,7 +117,7 @@ export function AccountView({ customer }: { customer: AccountCustomer }) {
           </div>
           <Button
             variant="outline"
-            onClick={signOut}
+            onClick={signOutAndGoHome}
             disabled={signingOut}
             className="h-10 rounded-xl border-stone-300 font-semibold text-stone-700 hover:bg-red-50 hover:text-red-700"
           >

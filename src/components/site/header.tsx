@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/site/language-provider";
+import { useAuth } from "@/components/site/auth-provider";
 import { useCart, cartCount } from "@/store/cart";
 import { cn } from "@/lib/utils";
 
@@ -72,6 +73,7 @@ export function Header() {
   const { t, locale, setLocale } = useLanguage();
   const mounted = useMounted();
   const { items, openCart } = useCart();
+  const { customer, loading, authAvailable, openAuth } = useAuth();
   // Persisted cart rehydrates from localStorage before React hydrates —
   // start at 0 for the first (server-matching) paint, then show the real count.
   const count = mounted ? cartCount(items) : 0;
@@ -161,19 +163,53 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Account link */}
-          <Link
-            href="/account"
-            aria-label={t.account.title}
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
-              solid
-                ? "text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-stone-300 dark:hover:bg-stone-800"
-                : "text-white/90 hover:bg-white/10 hover:text-white"
-            )}
-          >
-            <UserRound className="h-5 w-5" aria-hidden="true" />
-          </Link>
+          {/* Account: popup sign-in when signed out, profile avatar when signed in. */}
+          {customer ? (
+            <Link
+              href="/account"
+              aria-label={t.account.title}
+              title={customer.name}
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
+                solid ? "hover:bg-emerald-50 dark:hover:bg-stone-800" : "hover:bg-white/10"
+              )}
+            >
+              <span
+                aria-hidden="true"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-700 text-sm font-bold uppercase text-white ring-2 ring-emerald-100 dark:ring-emerald-900"
+              >
+                {customer.name.trim().charAt(0) || "\u200B"}
+              </span>
+            </Link>
+          ) : loading || !authAvailable ? (
+            <Link
+              href="/account"
+              aria-label={t.account.title}
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
+                solid
+                  ? "text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-stone-300 dark:hover:bg-stone-800"
+                  : "text-white/90 hover:bg-white/10 hover:text-white"
+              )}
+            >
+              <UserRound className="h-5 w-5" aria-hidden="true" />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openAuth("signin")}
+              aria-label={t.account.signIn}
+              title={t.account.signIn}
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
+                solid
+                  ? "text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-stone-300 dark:hover:bg-stone-800"
+                  : "text-white/90 hover:bg-white/10 hover:text-white"
+              )}
+            >
+              <UserRound className="h-5 w-5" aria-hidden="true" />
+            </button>
+          )}
 
           {/* Cart button */}
           <Button
@@ -291,14 +327,38 @@ export function Header() {
               })}
 
               {/* Account row */}
-              <Link
-                href="/account"
-                onClick={closeMenu}
-                className="flex items-center gap-2 rounded-xl px-4 py-3.5 text-base font-medium text-stone-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 dark:text-stone-300 dark:hover:bg-stone-800"
-              >
-                <UserRound className="h-5 w-5" aria-hidden="true" />
-                {t.account.title}
-              </Link>
+              {customer ? (
+                <Link
+                  href="/account"
+                  onClick={closeMenu}
+                  className="flex items-center gap-2 rounded-xl px-4 py-3.5 text-base font-medium text-stone-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 dark:text-stone-300 dark:hover:bg-stone-800"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-700 text-xs font-bold uppercase text-white"
+                  >
+                    {customer.name.trim().charAt(0) || "\u200B"}
+                  </span>
+                  <span className="truncate">{t.account.title}</span>
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    closeMenu();
+                    if (authAvailable) {
+                      openAuth("signin");
+                    } else {
+                      // No accounts database on this deployment — old behaviour.
+                      window.location.href = "/account";
+                    }
+                  }}
+                  className="flex w-full items-center gap-2 rounded-xl px-4 py-3.5 text-left text-base font-medium text-stone-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 dark:text-stone-300 dark:hover:bg-stone-800"
+                >
+                  <UserRound className="h-5 w-5" aria-hidden="true" />
+                  {t.account.title}
+                </button>
+              )}
 
               {/* Language + theme controls for small screens */}
               <div className="flex items-center justify-between gap-3 rounded-xl bg-stone-50 p-3 dark:bg-stone-900">

@@ -10,10 +10,30 @@ import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/components/site/language-provider";
 import { cn } from "@/lib/utils";
 
-export function AuthForm({ redirectTo = "/account" }: { redirectTo?: string }) {
+export type AuthCustomer = { id: number; email: string; name: string; phone: string | null };
+
+type AuthFormProps = {
+  /** "page" renders the standalone card (legacy pages); "modal" renders inside the auth popup. */
+  variant?: "page" | "modal";
+  initialMode?: "signin" | "create";
+  /** Where to go after success in page mode (ignored when onAuthed is given). */
+  redirectTo?: string;
+  /** Called after a successful sign-in / registration (popup mode). */
+  onAuthed?: (customer: AuthCustomer) => void;
+  /** Replaces the "continue shopping" link, e.g. to just close the popup. */
+  onBrowse?: () => void;
+};
+
+export function AuthForm({
+  variant = "page",
+  initialMode = "signin",
+  redirectTo = "/account",
+  onAuthed,
+  onBrowse,
+}: AuthFormProps) {
   const router = useRouter();
   const { t, locale } = useLanguage();
-  const [mode, setMode] = useState<"signin" | "create">("signin");
+  const [mode, setMode] = useState<"signin" | "create">(initialMode);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
@@ -38,8 +58,14 @@ export function AuthForm({ redirectTo = "/account" }: { redirectTo?: string }) {
       });
       const body = await res.json().catch(() => ({}));
       if (res.ok) {
-        router.push(redirectTo);
-        router.refresh();
+        if (onAuthed) {
+          // Popup mode: hand the signed-in customer to the provider and stay
+          // exactly where the visitor is (checkout, shop, …).
+          onAuthed((body?.customer ?? null) as AuthCustomer);
+        } else {
+          router.push(redirectTo);
+          router.refresh();
+        }
       } else {
         setError(body.error ?? t.account.signInError);
       }
@@ -52,16 +78,29 @@ export function AuthForm({ redirectTo = "/account" }: { redirectTo?: string }) {
 
   const field = "h-11 rounded-xl";
   const labelCls = "text-sm font-semibold text-stone-700";
+  const isModal = variant === "modal";
 
   return (
-    <div className="rounded-3xl bg-white p-6 shadow-lg ring-1 ring-stone-200 sm:p-8">
+    <div
+      className={cn(
+        isModal
+          ? "px-6 pb-6 pt-2 sm:px-8 sm:pb-8"
+          : "rounded-3xl bg-white p-6 shadow-lg ring-1 ring-stone-200 sm:p-8"
+      )}
+    >
       <div className="mb-6 flex flex-col items-center text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-700 text-white">
           <ShoppingBasket className="h-6 w-6" aria-hidden="true" />
         </span>
-        <h1 className="mt-3 text-2xl font-bold tracking-tight text-stone-900">
-          {mode === "signin" ? t.account.signInTitle : t.account.createTitle}
-        </h1>
+        {isModal ? (
+          <h2 className="mt-3 text-xl font-bold tracking-tight text-stone-900">
+            {mode === "signin" ? t.account.signInTitle : t.account.createTitle}
+          </h2>
+        ) : (
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-stone-900">
+            {mode === "signin" ? t.account.signInTitle : t.account.createTitle}
+          </h1>
+        )}
         <p className="mt-1 text-sm text-stone-500">
           {mode === "signin" ? t.account.signInSubtitle : t.account.createSubtitle}
         </p>
@@ -190,11 +229,20 @@ export function AuthForm({ redirectTo = "/account" }: { redirectTo?: string }) {
         )}
       </p>
 
-      <p className="mt-4 text-center text-xs text-stone-400">
-        <Link href="/shop" className="hover:underline">
-          {locale === "fi" ? "Jatka ostoksia ilman tiliä →" : "Continue shopping without an account →"}
-        </Link>
-      </p>
+      {!isModal && (
+        <p className="mt-4 text-center text-xs text-stone-400">
+          <Link href="/shop" className="hover:underline">
+            {locale === "fi" ? "Jatka ostoksia ilman tiliä →" : "Continue shopping without an account →"}
+          </Link>
+        </p>
+      )}
+      {isModal && onBrowse && (
+        <p className="mt-4 text-center text-xs text-stone-400">
+          <button type="button" onClick={onBrowse} className="hover:underline">
+            {locale === "fi" ? "Jatka ostoksia ilman tiliä →" : "Continue shopping without an account →"}
+          </button>
+        </p>
+      )}
     </div>
   );
 }

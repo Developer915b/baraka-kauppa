@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Sheet,
@@ -25,14 +25,17 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
+  LogIn,
   Store,
   CheckCircle2,
   PartyPopper,
+  UserRound,
   UserRoundCheck,
 } from "lucide-react";
 import { useCart, cartCount, cartSubtotal } from "@/store/cart";
 import { useLanguage } from "@/components/site/language-provider";
 import { useSettings } from "@/components/site/settings-provider";
+import { useAuth } from "@/components/site/auth-provider";
 import { cn } from "@/lib/utils";
 
 /** Replace {placeholders} in a translated template string. */
@@ -69,8 +72,13 @@ export function CartSheet() {
   const { t, locale } = useLanguage();
   const { items, isOpen, closeCart, setQty, removeItem, clear } = useCart();
   const settings = useSettings();
+  const { customer, authAvailable, openAuth } = useAuth();
   const DELIVERY_FEE = settings.deliveryFee;
   const FREE_THRESHOLD = settings.freeDeliveryThreshold;
+
+  // Ordering requires a (free) customer account when the accounts database is
+  // available. Deployments without one fall back to guest checkout.
+  const needsAuth = authAvailable && !customer;
 
   const [step, setStep] = useState<Step>("cart");
   const [method, setMethod] = useState<"delivery" | "pickup">("delivery");
@@ -127,30 +135,29 @@ export function CartSheet() {
     }
   };
 
-  /** Prefill from the signed-in customer profile — only fills empty fields. */
-  const loadCustomerProfile = async (): Promise<boolean> => {
-    try {
-      const res = await fetch("/api/auth/me", { cache: "no-store" });
-      if (!res.ok) return false;
-      const body = await res.json();
-      const c = body?.customer;
-      if (!c) return false;
+  /**
+   * Prefill the checkout form: saved details from the last order + the
+   * signed-in customer profile. Runs when entering checkout and again right
+   * after the visitor signs in / signs out while checkout is open.
+   */
+  useEffect(() => {
+    if (step !== "checkout") return;
+    const loadedSaved = loadSavedDetails();
+    if (customer) {
       setForm((f) => ({
         ...f,
-        customerName: f.customerName || c.name || "",
-        email: f.email || c.email || "",
-        phone: f.phone || c.phone || "",
+        customerName: f.customerName || customer.name || "",
+        email: f.email || customer.email || "",
+        phone: f.phone || customer.phone || "",
       }));
-      return Boolean(c.name || c.email);
-    } catch {
-      return false;
+      setSavedLoaded(true);
+    } else {
+      setSavedLoaded(loadedSaved);
     }
-  };
+  }, [step, customer]);
 
-  const goToCheckout = async () => {
-    const savedLoaded = loadSavedDetails();
-    const profileLoaded = await loadCustomerProfile();
-    setSavedLoaded(savedLoaded || profileLoaded);
+  const goToCheckout = () => {
+    setErrorMsg(null);
     setStep("checkout");
   };
 
@@ -395,13 +402,38 @@ export function CartSheet() {
             <ScrollArea className="min-h-0 flex-1 px-5 py-4">
               <p className="text-sm text-stone-600 dark:text-stone-400">{t.checkout.subtitle}</p>
 
-              {savedLoaded && (
+              {savedLoaded && !needsAuth && (
                 <p className="mt-3 flex items-center gap-2 rounded-xl bg-lime-50 px-3 py-2 text-xs font-medium text-lime-800 ring-1 ring-lime-200 dark:bg-lime-900/20 dark:text-lime-300 dark:ring-lime-900">
                   <UserRoundCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
                   {t.checkout.savedDetailsHint}
                 </p>
               )}
 
+              {/* Account gate: completing an order requires signing in or
+                  creating a free account (opens as a popup, then checkout
+                  continues right here). Guests only appear when the accounts
+                  database is not available on this deployment. */}
+              {needsAuth ? (
+                <div className="mt-4 rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 p-6 text-center dark:border-emerald-800 dark:bg-emerald-900/20">
+                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-700 text-white">
+                    <UserRound className="h-7 w-7" aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-3 text-base font-bold text-stone-900 dark:text-stone-50">
+                    {t.auth.checkoutGateTitle}
+                  </h3>
+                  <p className="mx-auto mt-1 max-w-xs text-sm leading-relaxed text-stone-600 dark:text-stone-300">
+                    {t.auth.checkoutGateText}
+                  </p>
+                  <Button
+                    className="mt-4 h-11 w-full rounded-full bg-emerald-700 font-semibold text-white hover:bg-emerald-800"
+                    onClick={() => openAuth("signin")}
+                  >
+                    <LogIn className="mr-2 h-4 w-4" aria-hidden="true" />
+                    {t.auth.gateButton}
+                  </Button>
+                </div>
+              ) : (
+              <>
               {/* Contact */}
               <fieldset className="mt-5 space-y-3">
                 <legend className="text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">
@@ -581,6 +613,8 @@ export function CartSheet() {
                   className="mt-1 min-h-20 rounded-xl border-stone-200 focus-visible:ring-emerald-600 dark:border-stone-700 dark:bg-stone-900"
                 />
               </div>
+              </>
+              )}
 
               {/* Summary */}
               <div className="mt-5 rounded-2xl bg-stone-50 p-4 ring-1 ring-stone-200/70 dark:bg-stone-900 dark:ring-stone-800">
@@ -642,7 +676,7 @@ export function CartSheet() {
                 <Button
                   className="h-12 flex-1 rounded-full bg-amber-400 text-base font-semibold text-emerald-950 hover:bg-amber-300"
                   onClick={submit}
-                  disabled={submitting || items.length === 0}
+                  disabled={submitting || items.length === 0 || needsAuth}
                 >
                   {submitting ? (
                     <>

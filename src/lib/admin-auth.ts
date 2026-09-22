@@ -1,9 +1,10 @@
-// Simple, strong-enough admin auth for a single-owner store.
+// Simple, strong-enough admin auth for a small shop.
 //
-// - Password comes from ADMIN_PASSWORD env var (never committed to the repo —
-//   it IS provided via netlify.toml/.env by the owner).
-// - Session = httpOnly cookie holding sha256(ADMIN_PASSWORD + salt). The
-//   cookie value never reveals the password and is verified on every request.
+// - Password(s) come from env vars (never committed to the repo):
+//   ADMIN_PASSWORD, ADMIN_PASSWORD_2, ADMIN_PASSWORD_3 — any one of them
+//   signs the owner in, which makes it easy to share access safely.
+// - Session = httpOnly cookie holding sha256(salt + primary password). The
+//   cookie value never reveals a password and is verified on every request.
 
 import { createHash, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
@@ -11,14 +12,26 @@ import type { NextRequest } from "next/server";
 
 const COOKIE_NAME = "bk_admin_session";
 const SALT = "baraka-kauppa-admin-v1";
-const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+// Persistent sign-in: ~400 days (the browser maximum) — stays signed in
+// until the owner explicitly signs out.
+const MAX_AGE = 60 * 60 * 24 * 400;
 
 export function getAdminPassword(): string {
-  return process.env.ADMIN_PASSWORD ?? "";
+  return getAdminPasswords()[0] ?? "";
+}
+
+/** Every admin password configured via env (primary + extras). */
+export function getAdminPasswords(): string[] {
+  const candidates = [
+    process.env.ADMIN_PASSWORD,
+    process.env.ADMIN_PASSWORD_2,
+    process.env.ADMIN_PASSWORD_3,
+  ];
+  return candidates.filter((p): p is string => typeof p === "string" && p.length >= 6);
 }
 
 export function adminPasswordSet(): boolean {
-  return getAdminPassword().length >= 6;
+  return getAdminPasswords().length > 0;
 }
 
 export function expectedAdminToken(): string {
@@ -33,9 +46,10 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export function verifyPassword(password: string): boolean {
-  const expected = getAdminPassword();
-  if (!expected) return false;
-  return safeEqual(password, expected);
+  const passwords = getAdminPasswords();
+  if (passwords.length === 0) return false;
+  // Any of the configured admin passwords signs the owner in.
+  return passwords.some((expected) => safeEqual(password, expected));
 }
 
 export function sessionCookieOptions() {

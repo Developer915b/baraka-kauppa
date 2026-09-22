@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AccountView, type AccountCustomer } from "@/components/site/account-view";
-import { AuthForm } from "@/components/site/auth-form";
+import { AccountGate } from "@/components/site/account-gate";
 import { getCustomerIdFromSession } from "@/lib/customer-auth";
 import { sbFetch } from "@/lib/supabase";
 
@@ -15,11 +15,7 @@ export default async function AccountPage() {
   const customerId = await getCustomerIdFromSession();
 
   if (!customerId) {
-    return (
-      <div className="mx-auto w-full max-w-md px-4 pb-20 pt-10">
-        <AuthForm />
-      </div>
-    );
+    return <AccountGate />;
   }
 
   let customer: AccountCustomer | null = null;
@@ -43,11 +39,7 @@ export default async function AccountPage() {
 
   if (!customer) {
     // Session cookie valid but the customer row is gone (e.g. settings reset).
-    return (
-      <div className="mx-auto w-full max-w-md px-4 pb-20 pt-10">
-        <AuthForm />
-      </div>
-    );
+    return <AccountGate />;
   }
 
   return <AccountView customer={customer} />;

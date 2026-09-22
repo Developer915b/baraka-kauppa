@@ -151,11 +151,12 @@ export function Footer() {
             </p>
             <Link
               href="/admin"
-              aria-label="Shop owner login"
-              title="Shop owner login"
-              className="flex items-center gap-1.5 text-stone-600 transition-colors hover:text-amber-300"
+              aria-label={t.footer.adminAria}
+              title={t.footer.adminAria}
+              className="flex items-center gap-1.5 rounded-full border border-stone-700 px-3 py-1.5 text-xs font-semibold text-stone-400 transition-colors hover:border-amber-400/60 hover:text-amber-300"
             >
-              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              {t.footer.admin}
             </Link>
           </div>
         </div>

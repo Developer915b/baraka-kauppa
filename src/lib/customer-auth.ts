@@ -9,7 +9,9 @@ import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 
 const COOKIE_NAME = "bk_customer_session";
-const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+// Keep the customer signed in for as long as the browser allows (~400 days
+// is the hard cap in Chrome/Safari; effectively "forever" until they sign out).
+const MAX_AGE = 60 * 60 * 24 * 400;
 
 const SECRET_BASE =
   process.env.CUSTOMER_SESSION_SECRET || process.env.ADMIN_PASSWORD || "baraka-kauppa-customers-v1";

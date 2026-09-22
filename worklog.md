@@ -235,3 +235,28 @@ Stage Summary:
 - DB reads reduced via TTL in-memory cache + CDN cache headers + cache invalidation on writes
 - Dev daemon trick: scripts/start-dev-daemon.cjs (detached spawn) — plain `setsid bun dev` dies between tool sessions in this sandbox
 - Pushed to github.com/Developer915b/baraka-kauppa (main)
+
+---
+Task ID: 11
+Agent: Main agent (Super Z)
+Task: Login required before checkout (popup-based), persistent-forever sessions, second admin password via env, proper footer admin button, same-header account experience, cron keepalive endpoint, full E2E testing.
+
+Work Log:
+- Persistent sessions: customer cookie 30d -> 400d (browser hard cap, effectively "forever until logout"); admin cookie 7d -> 400d. Verified Set-Cookie Max-Age=34560000 for both.
+- Multi admin password: ADMIN_PASSWORD_2 / ADMIN_PASSWORD_3 env vars — any configured password signs the owner in; session token still derives from the primary password so cookies survive password-list changes. Tested login with ADMIN_PASSWORD_2 -> dashboard OK.
+- Global auth popup: new AuthProvider (src/components/site/auth-provider.tsx) holding customer state (/api/auth/me) + openAuth/closeAuth/signOut + a centered Dialog with AuthForm (modal variant, no navigation). /api/auth/me now returns authAvailable (sbStatus().canWrite) so deployments without the accounts DB fall back to guest mode everywhere.
+- Header: account icon opens the sign-in popup when signed out (and auth available); becomes a profile avatar (customer initial, links /account) when signed in; mobile menu row follows the same logic. Old /login page deleted — auth is popup-only now.
+- Checkout gate: cart-sheet checkout step requires sign-in when authAvailable (friendly gate card + disabled "Place order"); gate button opens the popup; after sign-in the form appears in place of the gate, prefilled from the profile (name/email/phone) + saved details; order placed on mobile+desktop signed-in. Guest fallback preserved when no accounts DB.
+- /account moved from src/app/account to src/app/(site)/account so it renders under the SAME site header/footer as every page (user complaint: "no need to take a new page with new header"). New AccountGate client component: signed-out visitors get a sign-in card that opens the popup and router.refresh() swaps in the server-rendered AccountView after success. AccountView signOut now uses provider signOut.
+- Footer: admin entry upgraded from a barely-visible icon to a labeled bordered pill "Admin / Ylläpito" with ShieldCheck -> /admin (i18n footer.admin/adminAria).
+- Cron keepalive: new GET /api/cron/keepalive — tiny Supabase REST read keeps the project awake; optional CRON_KEY env makes it require ?key=; returns ok/database/time. Verified locally {ok:true,database:"awake"}.
+- i18n: new auth.* section (checkoutGateTitle/Text, gateButton, accountGateTitle/Text) + footer.admin/adminAria in EN and FI.
+- Fixes during testing: "Place order" clickable while gate shown (now disabled); saved-details hint flashed above the gate (hidden when gate active); missing DialogHeader import; stale .next/types broke scoped tsc (cleared).
+- Testing: lint 0 errors (scripts/*.cjs added to eslint ignores; pre-existing), biome clean, tsc clean, NETLIFY=true build OK (all routes dynamic incl /account, /api/cron/keepalive; /login gone). E2E desktop+mobile 390: register via popup from header (stays on page, avatar appears), checkout gate EN+FI, popup sign-in -> prefilled form -> order placed -> success, /account order history (BK-MUCPDNNO29), admin pw2 login + orders show member phone/email/address, footer admin pill EN+FI, sign-out reverts header, no horizontal overflow anywhere. Supabase cleaned: 2 test orders + test customer deleted (owner's own "test" customer left untouched).
+
+Stage Summary:
+- Ordering now requires a (free) customer account: gate -> popup sign-in/sign-up -> same-page continuation with prefilled details; guests only when the accounts DB is missing.
+- Sessions persist ~400 days (browser cap) for both shop customers and the admin; ADMIN_PASSWORD_2/3 supported via env.
+- /account shares the standard site chrome; header icon transforms sign-in <-> profile avatar.
+- Cron keepalive endpoint live at /api/cron/keepalive (no secrets committed; optional CRON_KEY).
+- Supabase side already fully set up; no new SQL needed. Env vars to add in Netlify: ADMIN_PASSWORD_2 (optional), CRON_KEY (optional).

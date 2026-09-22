@@ -300,12 +300,23 @@ export const translations = {
       processing: "Just a moment…",
       signInError: "Sign-in failed. Check your details and try again.",
     },
+    auth: {
+      checkoutGateTitle: "Sign in to complete your order",
+      checkoutGateText:
+        "It takes less than a minute. Your contact details are saved for next time, and you can follow your orders any time.",
+      gateButton: "Sign in or create account",
+      accountGateTitle: "Sign in to see your account",
+      accountGateText:
+        "Your profile and order history live here. Sign in — or create a free account — to continue.",
+    },
     footer: {
       tagline: "Your international & halal grocery store in Kouvola.",
       quickLinks: "Quick Links",
       contactTitle: "Contact",
       rights: "All rights reserved.",
       madeIn: "Kouvola, Finland",
+      admin: "Admin",
+      adminAria: "Shop owner login",
     },
     langName: "Suomi",
     langSwitchLabel: "Switch to Finnish",
@@ -608,12 +619,23 @@ export const translations = {
       processing: "Hetkinen…",
       signInError: "Kirjautuminen epäonnistui. Tarkista tiedot ja yritä uudelleen.",
     },
+    auth: {
+      checkoutGateTitle: "Kirjaudu sisään tilauksen viimeistelyä varten",
+      checkoutGateText:
+        "Kestää alle minuutin. Yhteystietosi tallennetaan seuraavaa kertaa varten, ja voit seurata tilauksiasi milloin tahansa.",
+      gateButton: "Kirjaudu tai luo tili",
+      accountGateTitle: "Kirjaudu nähdäksesi tilisi",
+      accountGateText:
+        "Profiilisi ja tilaushistoriasi ovat täällä. Kirjaudu sisään — tai luo ilmainen tili — jatkaaksesi.",
+    },
     footer: {
       tagline: "Kansainvälinen ja halal-ruokakauppasi Kouvolassa.",
       quickLinks: "Pikalinkit",
       contactTitle: "Yhteystiedot",
       rights: "Kaikki oikeudet pidätetään.",
       madeIn: "Kouvola, Suomi",
+      admin: "Ylläpito",
+      adminAria: "Kaupan ylläpito",
     },
     langName: "English",
     langSwitchLabel: "Switch to English",
