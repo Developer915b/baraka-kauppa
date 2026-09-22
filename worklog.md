@@ -295,3 +295,25 @@ Stage Summary:
 - DB reads further reduced: SWR cache (serve-stale + background refresh), parallel-request dedup, longer TTLs, CDN header bump, plus a client-side micro-cache with focus revalidation.
 - Realtime preserved: admin writes invalidate the cache instantly (storefront reflects changes immediately on the writing instance, within one TTL elsewhere); admin-facing reads remain uncached; client caches revalidate on focus.
 - Full UI/UX audit passed on desktop + mobile with zero bugs or responsive defects found; no code fixes were needed beyond the cache work.
+
+---
+Task ID: 13
+Agent: Main agent (Super Z)
+Task: Owner-reported fixes — account page header/content overlap, broken multi-photo upload (one-by-one only), plus an exhaustive overflow audit of every UI on desktop and mobile.
+
+Work Log:
+- Hosting discovery: www.barakakauppa.com is now served by VERCEL (server: Vercel; Netlify site baraka-kauppa.netlify.app returns 404). GitHub->Vercel auto-deploy confirmed in ~45-60s per push via the keepalive version marker (now 2026-09-22.3).
+- Account page overlap FIXED: AccountView + AccountGate wrappers used pt-10 (40px) under the 64px fixed header, so the header covered the top of the profile card; changed to pt-28. Verified live: h1 top 152px on mobile and desktop, signed-in view + signed-out gate, zero overflow.
+- Mobile toast bug FIXED (found during the sweep): the toast viewport was fixed top-0 full-width with pointer-events-auto on mobile, so the "Added to cart" toast covered the header and intercepted taps on the cart button for a few seconds; viewport moved to top-16 (below the 64px header) and set to pointer-events-none (individual toasts stay interactive). Verified live: header cart button clickable while the toast shows; desktop keeps bottom-right placement.
+- Multi-photo upload ROOT CAUSE: hosting moved to Vercel, whose serverless functions reject request bodies over ~4.5 MB (proven: 5 MB POST -> 413 FUNCTION_PAYLOAD_TOO_LARGE, 2 MB passes). Multi-photo batches exceeded the cap (several phone photos = many MB) -> live upload failed, while single small photos worked — exactly the owner's report. FIX in product-form.tsx: photos are uploaded ONE PER REQUEST in a sequential queue (multi-select still fills the queue automatically), files > 3.5 MB are compressed in the browser first (createImageBitmap/canvas -> max 2200 px, JPEG q0.9; server still re-optimises to WebP), undecodable oversized files get a clear per-file error while the rest continue. Verified locally end-to-end: 4 photos selected at once (3 small + one 5.9 MB) all uploaded, the big one auto-compressed, zero errors.
+- Exhaustive overflow sweep (agent-browser, document scrollWidth vs clientWidth + unclipped-wide-element detection): home, shop (all/filter/search/empty state), product detail, contact, account (gate + signed-in), 404, cart drawer, auth popup, admin login/dashboard/products list/new form/edit form/orders/site settings — at 1280x900, 390x844 and 320x700, light + dark, EN + FI. ZERO page overflow on every surface; the only wide elements are inside intentional scroll-snap tab rows and overflow-hidden decorative containers (verified clipped, visually correct).
+- Multi-upload verified working locally before the fix as well (3-at-once fine locally) — confirming the failure was the host's payload limit, not the UI.
+- Live verification after deploy: account fix (mobile+desktop, signed-in+gate), toast fix, overflow sweep on all main pages (390 + 1280), popup register -> signed-in account view, sign out; console clean.
+- Data notes for the owner (not touched): Premium Basmati Rice (id 1) is no longer in the products table (deleted during the owner's own admin testing — restore via Products -> New product if unintended); a test product "cat" (id 38, 1.00 EUR) created during their testing is live on the storefront (delete it in Products if unwanted); 4 meow-cat photos remain in the product_images bucket (their uploads).
+- Cleanup: all my test uploads (7 webp) deleted from the product_images bucket; all test customers (mobileaudit/livecheck/livefix/overflow) and test orders (BK-MUCQDANG46, BK-MUCR6LOM66) deleted from Supabase; owner's own rows untouched.
+- Checks: biome clean, tsc clean, NETLIFY=true production build OK, bun.lock untouched.
+
+Stage Summary:
+- Three fixes shipped and live-verified: account page no longer hides under the header, mobile toasts no longer block the header, multi-photo upload works with many photos at once on Vercel (sequential 1-per-request + automatic client-side compression of large photos).
+- Every UI surface audited for overflow on desktop/mobile/narrow in both languages and themes — no remaining layout defects found.
+- Live deployment pipeline (GitHub -> Vercel) confirmed working with a visible version marker at /api/cron/keepalive.
