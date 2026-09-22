@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         database: "awake",
         // Deployment version marker — lets the owner confirm which code is
         // live by simply opening this endpoint.
-        version: "2026-09-22.2",
+        version: "2026-09-22.3",
         time: new Date().toISOString(),
       },
       { headers: { "Cache-Control": "no-store" } }

@@ -21,7 +21,7 @@ export function AccountGate() {
   }, [customer, router]);
 
   return (
-    <div className="mx-auto w-full max-w-md px-4 pb-20 pt-10">
+    <div className="mx-auto w-full max-w-md px-4 pb-20 pt-28">
       <div className="rounded-3xl bg-white p-6 text-center shadow-lg ring-1 ring-stone-200 sm:p-8">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-700 text-white">
           <UserRound className="h-7 w-7" aria-hidden="true" />

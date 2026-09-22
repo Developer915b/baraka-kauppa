@@ -110,6 +110,45 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
   const cover = values.images[0] ?? null;
 
   // ---------- Photo handling ----------
+  // Photos are uploaded ONE PER REQUEST, in sequence. Multi-select still works
+  // (the queue runs automatically), but each request stays far below the
+  // hosting provider's ~4.5 MB request limit — sending several photos in one
+  // request made multi-upload fail on the live site (413 payload too large),
+  // while single photos worked.
+  const MAX_REQUEST_BYTES = 3_500_000;
+
+  // Shrink a photo in the browser when it is too big to upload safely:
+  // resize to max 2200 px and re-encode as high-quality JPEG (the server
+  // re-optimises to WebP afterwards, so quality stays sharp).
+  const compressImage = async (file: File): Promise<File | null> => {
+    try {
+      if (file.type === "image/gif") return null;
+      const bitmap = await createImageBitmap(file);
+      const maxDim = 2200;
+      const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        bitmap.close();
+        return null;
+      }
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg", 0.9)
+      );
+      if (!blob || blob.size >= file.size) return null;
+      const name = `${file.name.replace(/\.[^.]+$/, "")}.jpg`;
+      return new File([blob], name, { type: "image/jpeg" });
+    } catch {
+      // Browser cannot decode this format (e.g. HEIC outside Safari) — the
+      // caller falls back to the original file.
+      return null;
+    }
+  };
+
   const addImages = (urls: string[]) =>
     setValues((v) => {
       const merged = [...v.images];
@@ -127,23 +166,38 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
     }
     setUploadError(null);
     setUploading((n) => n + list.length);
-    try {
-      for (let i = 0; i < list.length; i += 4) {
-        const batch = list.slice(i, i + 4);
+    const tooBig: string[] = [];
+    for (const original of list) {
+      try {
+        // Big photos are compressed in the browser first; small ones go as-is.
+        let file = original;
+        if (file.size > MAX_REQUEST_BYTES) {
+          const smaller = await compressImage(file);
+          if (smaller) file = smaller;
+        }
+        if (file.size > MAX_REQUEST_BYTES) {
+          tooBig.push(original.name);
+          continue;
+        }
         const form = new FormData();
-        for (const f of batch) form.append("files", f);
+        form.append("files", file);
         const res = await fetch("/api/admin/upload", { method: "POST", body: form });
         const body = await res.json().catch(() => ({}));
-        if (res.ok && Array.isArray(body.urls)) {
+        if (res.ok && Array.isArray(body.urls) && body.urls.length > 0) {
           addImages(body.urls as string[]);
         } else {
           setUploadError(body.error ?? "Uploading failed. Please try again.");
         }
-        setUploading((n) => Math.max(0, n - batch.length));
+      } catch {
+        setUploadError("Uploading failed. Check your connection and try again.");
+      } finally {
+        setUploading((n) => Math.max(0, n - 1));
       }
-    } catch {
-      setUploadError("Uploading failed. Check your connection and try again.");
-      setUploading(0);
+    }
+    if (tooBig.length > 0) {
+      setUploadError(
+        `${tooBig.join(", ")} ${tooBig.length > 1 ? "are" : "is"} too large to upload. Please choose a smaller photo.`
+      );
     }
   };
 
@@ -416,7 +470,7 @@ export function ProductForm({ mode, productId, initial }: ProductFormProps) {
                   e.target.value = "";
                 }}
               />
-              <p className="text-[11px] text-stone-400">JPG, PNG, WebP or HEIC · up to 12 MB each</p>
+              <p className="text-[11px] text-stone-400">JPG, PNG, WebP or HEIC — big photos are shrunk automatically</p>
             </div>
             {uploadError && (
               <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">

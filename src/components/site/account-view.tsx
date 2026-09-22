@@ -91,7 +91,7 @@ export function AccountView({ customer }: { customer: AccountCustomer }) {
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 pb-20 pt-10">
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 pb-20 pt-28">
       {/* Profile card */}
       <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-stone-200">
         <div className="flex flex-wrap items-start justify-between gap-4">
