@@ -260,3 +260,20 @@ Stage Summary:
 - /account shares the standard site chrome; header icon transforms sign-in <-> profile avatar.
 - Cron keepalive endpoint live at /api/cron/keepalive (no secrets committed; optional CRON_KEY).
 - Supabase side already fully set up; no new SQL needed. Env vars to add in Netlify: ADMIN_PASSWORD_2 (optional), CRON_KEY (optional).
+
+---
+Task ID: 11-b
+Agent: Main agent (Super Z)
+Task: Real-site (www.barakakauppa.com) verification of Task 11 after Netlify deploy.
+
+Work Log:
+- Netlify deployed d50984e ~80s after push (detected via new /api/cron/keepalive returning 200 {ok:true,database:"awake"}).
+- Live env confirmed: /api/auth/me authAvailable:true, /api/products source:supabase (18 products), /api/settings serving owner data.
+- Live E2E (desktop 1280, agent-browser): signed-out checkout showed the sign-in gate; "Sign in or create account" opened the popup; registered a real account in the popup (stayed on the same page); checkout form appeared prefilled; placed real order BK-MUCPPTZ555 (delivery, 7.80 €) — row persisted in Supabase orders with customer_id=4 linking to the new customers row.
+- Live account gate verified for signed-out visitors; header sign-in icon state correct; footer "Admin" pill visible on live site; zero console/page errors; no horizontal overflow.
+- Live admin panel NOT exercised with a password (owner's real ADMIN_PASSWORD differs from the local one — live login correctly rejected the local test password, proving env isolation). Data path behind the admin orders view verified via the same Supabase rows the admin panel reads.
+- Cleanup: live test order BK-MUCPPTZ555 + live test customer (livetest.buyer@example.com, id 4) deleted from Supabase.
+
+Stage Summary:
+- All new client features verified working on the production site in real time; database left clean.
+- Keepalive endpoint production-ready for cron-job.org: https://www.barakakauppa.com/api/cron/keepalive
