@@ -1,6 +1,22 @@
 # Worklog
 
 ---
+Task ID: 12
+Agent: Main agent (Super Z)
+Task: Push all code files and docs to a NEW private repo using a second token (belongs to account "mythos0").
+
+Work Log:
+- Verified new token: account mythos0 (id 158544046), scope "repo"; old Developer915b token still valid
+- Checked workspace: no untracked/uncommitted files; docs (README.md, worklog.md) already tracked; baraka-kauppa-private name free under mythos0
+- Created private repo mythos0/baraka-kauppa-private via API, added remote "mythos"
+- Pushed main with full history (tip 97f8c64, 225 tracked files incl. README.md + worklog.md); verified tip on GitHub
+- Secret scan of tracked files clean — no tokens, no Supabase secret keys, no cron path
+
+Stage Summary:
+- Project now has THREE remotes: origin = public Developer915b/baraka-kauppa (Netlify deploys from this), private = Developer915b/baraka-kauppa-private, mythos = mythos0/baraka-kauppa-private
+- Future pushes should go to all three (git push origin main && git push private main && git push mythos main)
+
+---
 Task ID: 11
 Agent: Main agent (Super Z)
 Task: Push all code files to a new PRIVATE GitHub repo as well (user provided token in chat).
