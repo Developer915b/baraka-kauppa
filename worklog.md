@@ -1,6 +1,23 @@
 # Worklog
 
 ---
+Task ID: 11
+Agent: Main agent (Super Z)
+Task: Push all code files to a new PRIVATE GitHub repo as well (user provided token in chat).
+
+Work Log:
+- Audited working tree before pushing: 58 files were mode-only changes (environment restore artifact) + 1 real loss — src/app/api/admin/upload/route.ts (the admin photo-upload endpoint called by product-form.tsx) had been deleted from the working tree during restore
+- Restored full working tree to HEAD (git restore .) — upload endpoint back (66 lines), git status clean, no untracked code
+- Created private repo Developer915b/baraka-kauppa-private via GitHub API and added it as remote "private"
+- Pushed main with full history (tip d009bc8, 225 tracked files); verified tip commit matches on GitHub
+- Secret scan of all tracked files: no GitHub tokens, no Supabase secret/publishable keys, no cron path — public-repo hygiene carried over to the private mirror; .env and runtime artifacts remain gitignored
+
+Stage Summary:
+- Code now lives in TWO remotes: origin = public Developer915b/baraka-kauppa (deploys via Netlify), private = Developer915b/baraka-kauppa-private (mirror)
+- No secrets committed to either repo; ADMIN_PASSWORD / Supabase keys stay in env (Netlify UI) only
+- Future pushes should go to both remotes (git push origin main && git push private main)
+
+---
 Task ID: 10
 Agent: Main agent (Super Z)
 Task: Full admin panel + move all products to Supabase (user provided Supabase URL/keys), make settings easy for the admin, tell the user what they must do on the Supabase side.
